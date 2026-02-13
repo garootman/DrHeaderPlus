@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utility functions for core module."""
 import io
 import os
@@ -16,7 +15,7 @@ class KeyValueDirective(NamedTuple):
 
 def default_rules():
     """Returns the drHEADer default ruleset."""
-    with open(os.path.join(os.path.dirname(__file__), 'resources/rules.yml'), 'r') as rules:
+    with open(os.path.join(os.path.dirname(__file__), 'resources/rules.yml')) as rules:
         rules = yaml.safe_load(rules.read())
         return rules
 

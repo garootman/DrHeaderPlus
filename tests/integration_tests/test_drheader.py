@@ -1,6 +1,6 @@
 import os
-
 import unittest
+
 import yaml
 
 from tests.integration_tests import utils

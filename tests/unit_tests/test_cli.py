@@ -1,7 +1,7 @@
 import json
 import os
 import os.path
-from unittest import mock, TestCase
+from unittest import TestCase, mock
 
 import yaml
 from click.testing import CliRunner
@@ -186,7 +186,7 @@ class TestUtils(TestCase, XmlTestMixin):
             self.rules = yaml.safe_load(rules)
 
         utils.file_junit_report(self.rules, self.report)
-        with open('reports/junit.xml') as junit_report:
+        with open('reports/junit.xml', 'rb') as junit_report:
             self.junit_xml = junit_report.read()
 
     def test_get_rules__should_return_default_rules_when_no_rules_provided(self):
@@ -215,4 +215,5 @@ class TestUtils(TestCase, XmlTestMixin):
         assert len(self.report) > 0
 
         xml_tree = self.assertXmlDocument(self.junit_xml)
-        self.assertXmlHasAttribute(xml_tree, 'failures', expected_value=str(len(self.report)))
+        test_suite = xml_tree.find('testsuite')
+        self.assertXmlHasAttribute(test_suite, 'failures', expected_value=str(len(self.report)))

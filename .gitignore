@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# local development files
+.claude/
+.vscode/
+work_docs/
+
 # Distribution / packaging
 .Python
 env/

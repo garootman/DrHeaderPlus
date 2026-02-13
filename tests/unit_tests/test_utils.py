@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """Tests for `utils.py` file."""
 
 import os
+import unittest
 
 import responses
-import unittest
 import yaml
 
 from drheader import utils

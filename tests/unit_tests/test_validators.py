@@ -1,6 +1,6 @@
+import unittest
 from unittest import mock
 
-import unittest
 from requests import structures
 
 from drheader import report, utils

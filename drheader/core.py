@@ -171,7 +171,7 @@ def _get_headers_from_url(url, method='head', **kwargs):
     if 'allow_redirects' not in kwargs:
         kwargs['allow_redirects'] = True
 
-    response = requests.request(method, url, **kwargs)
+    response = requests.request(method, url, **kwargs)  # noqa: S113
     response_headers = response.headers
     response_headers['set-cookie'] = response.raw.headers.getlist('Set-Cookie')
     return response_headers

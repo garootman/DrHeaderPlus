@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # drheader documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun  9 13:47:02 2017.
@@ -52,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'drHEADer'
-author = u"Santander UK"
+project = 'drHEADer'
+author = "Santander UK"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -131,8 +130,8 @@ latex_elements = {
 # [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'drheader.tex',
-     u'drHEADer Documentation',
-     u'James Morris', 'manual'),
+     'drHEADer Documentation',
+     'James Morris', 'manual'),
 ]
 
 # -- Options for manual page output ------------------------------------
@@ -141,7 +140,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     (master_doc, 'drheader',
-     u'drHEADer Documentation',
+     'drHEADer Documentation',
      [author], 1)
 ]
 
@@ -152,7 +151,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'drheader',
-     u'drHEADer Documentation',
+     'drHEADer Documentation',
      author,
      'drheader',
      'One line description of project.',
