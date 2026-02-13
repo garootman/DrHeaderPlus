@@ -99,9 +99,13 @@ Set-Cookie:
 Strict-Transport-Security:
     Required: True
     Severity: high
-    Value:
-        - max-age=31536000
+    Must-Contain:
         - includeSubDomains
+    Directives:
+        max-age:
+            Required: True
+            Severity: high
+            Value-Gte: 15552000
 User-Agent:
     Required: False
     Severity: low

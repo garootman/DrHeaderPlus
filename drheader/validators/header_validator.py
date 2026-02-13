@@ -1,5 +1,6 @@
 """Validator module for headers."""
-from typing import Any
+
+from typing import Any, Never
 
 from requests.structures import CaseInsensitiveDict
 
@@ -7,9 +8,9 @@ from drheader import utils
 from drheader.report import ErrorType, ReportItem
 from drheader.validators import base
 
-_DELIMITER_TYPE = 'item_delimiter'
-_POLICY_HEADERS = ['content-security-policy', 'feature-policy', 'permissions-policy']
-_STRIP_HEADERS = ['clear-site-data']
+_DELIMITER_TYPE = "item_delimiter"
+_POLICY_HEADERS = ["content-security-policy", "feature-policy", "permissions-policy"]
+_STRIP_HEADERS = ["clear-site-data"]
 
 
 class HeaderValidator(base.ValidatorBase):
@@ -26,19 +27,19 @@ class HeaderValidator(base.ValidatorBase):
     def exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         if header not in self.headers:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.REQUIRED
-            if 'value' in config:
+            if "value" in config:
                 delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-                expected = base.get_expected_values(config, 'value', delimiter)
+                expected = base.get_expected_values(config, "value", delimiter)
                 return ReportItem(severity, error_type, header, expected=expected, delimiter=delimiter)
-            elif 'value-any-of' in config:
+            elif "value-any-of" in config:
                 delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-                expected = base.get_expected_values(config, 'value-any-of', delimiter)
+                expected = base.get_expected_values(config, "value-any-of", delimiter)
                 return ReportItem(severity, error_type, header, expected=expected, delimiter=delimiter)
-            elif 'value-one-of' in config:
+            elif "value-one-of" in config:
                 delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-                expected = base.get_expected_values(config, 'value-one-of', delimiter)
+                expected = base.get_expected_values(config, "value-one-of", delimiter)
                 return ReportItem(severity, error_type, header, expected=expected)
             else:
                 return ReportItem(severity, error_type, header)
@@ -46,20 +47,20 @@ class HeaderValidator(base.ValidatorBase):
     def not_exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         if header in self.headers:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.DISALLOWED
             return ReportItem(severity, error_type, header)
 
     def value(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        expected = base.get_expected_values(config, 'value', delimiter)
+        expected = base.get_expected_values(config, "value", delimiter)
 
         header_value = self.headers[header]
-        strip_chars = base.get_delimiter(config, 'strip') if header.lower() in _STRIP_HEADERS else None
+        strip_chars = base.get_delimiter(config, "strip") if header.lower() in _STRIP_HEADERS else None
         header_items = utils.parse_policy(header_value, item_delimiter=delimiter, strip_chars=strip_chars)
 
-        if config.get('preserve-order'):
+        if config.get("preserve-order"):
             header_items = [item.lower() for item in header_items]
             expected_lower = [item.lower() for item in expected]
         else:
@@ -67,17 +68,17 @@ class HeaderValidator(base.ValidatorBase):
             expected_lower = {item.lower() for item in expected}
 
         if header_items != expected_lower:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.VALUE
             return ReportItem(severity, error_type, header, value=header_value, expected=expected, delimiter=delimiter)
 
     def value_any_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        accepted = base.get_expected_values(config, 'value-any-of', delimiter)
+        accepted = base.get_expected_values(config, "value-any-of", delimiter)
 
         header_value = self.headers[header]
-        strip_chars = base.get_delimiter(config, 'strip') if header.lower() in _STRIP_HEADERS else None
+        strip_chars = base.get_delimiter(config, "strip") if header.lower() in _STRIP_HEADERS else None
         header_items = utils.parse_policy(header_value, item_delimiter=delimiter, strip_chars=strip_chars)
 
         anomalies = []
@@ -87,35 +88,56 @@ class HeaderValidator(base.ValidatorBase):
                 anomalies.append(item)
 
         if anomalies:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.VALUE_ANY
-            return ReportItem(severity, error_type, header, value=header_value, expected=accepted, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
+            return ReportItem(
+                severity,
+                error_type,
+                header,
+                value=header_value,
+                expected=accepted,
+                anomalies=anomalies,
+                delimiter=delimiter,
+            )  # noqa:E501
 
     def value_one_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        accepted = base.get_expected_values(config, 'value-one-of', delimiter)
+        accepted = base.get_expected_values(config, "value-one-of", delimiter)
 
         header_value = self.headers[header]
-        strip_chars = base.get_delimiter(config, 'strip') if header.lower() in _STRIP_HEADERS else None
+        strip_chars = base.get_delimiter(config, "strip") if header.lower() in _STRIP_HEADERS else None
 
         if header_value.strip(strip_chars).lower() not in {item.lower() for item in accepted}:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.VALUE_ONE
             return ReportItem(severity, error_type, header, value=header_value, expected=accepted)
 
+    def value_gte(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> Never:
+        """Method not supported at header level. Use directive-level Value-Gte instead.
+
+        Raises:
+            UnsupportedValidationError: If the method is called.
+        """
+        raise base.UnsupportedValidationError(
+            "'Value-Gte' validations are not supported for headers. Use directive-level rules instead"
+        )
+
     def must_avoid(
-        self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any,
+        self,
+        config: CaseInsensitiveDict[str, Any],
+        header: str,
+        **kwargs: Any,
     ) -> ReportItem | list[ReportItem] | None:
         """See base class."""
         if header.lower() in _POLICY_HEADERS:
             return self._validate_must_avoid_for_policy_header(config, header)
 
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        disallowed = base.get_expected_values(config, 'must-avoid', delimiter)
+        disallowed = base.get_expected_values(config, "must-avoid", delimiter)
 
         header_value = self.headers[header]
-        header_items = utils.parse_policy(header_value, **config.get('delimiters', {}), keys_only=True)
+        header_items = utils.parse_policy(header_value, **config.get("delimiters", {}), keys_only=True)
         header_items = {str(item).lower() for item in header_items}
 
         anomalies = []
@@ -124,17 +146,17 @@ class HeaderValidator(base.ValidatorBase):
                 anomalies.append(avoid)
 
         if anomalies:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.AVOID
             return ReportItem(severity, error_type, header, value=header_value, avoid=disallowed, anomalies=anomalies)
 
     def must_contain(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        expected = base.get_expected_values(config, 'must-contain', delimiter)
+        expected = base.get_expected_values(config, "must-contain", delimiter)
 
         header_value = self.headers[header]
-        header_items = utils.parse_policy(header_value, **config.get('delimiters', {}), keys_only=True)
+        header_items = utils.parse_policy(header_value, **config.get("delimiters", {}), keys_only=True)
         header_items = {str(item).lower() for item in header_items}
 
         anomalies = []
@@ -143,34 +165,44 @@ class HeaderValidator(base.ValidatorBase):
                 anomalies.append(contain)
 
         if anomalies:
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.CONTAIN
-            return ReportItem(severity, error_type, header, value=header_value, expected=expected, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
+            return ReportItem(
+                severity,
+                error_type,
+                header,
+                value=header_value,
+                expected=expected,
+                anomalies=anomalies,
+                delimiter=delimiter,
+            )  # noqa:E501
 
     def must_contain_one(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        expected = base.get_expected_values(config, 'must-contain-one', delimiter)
+        expected = base.get_expected_values(config, "must-contain-one", delimiter)
 
         header_value = self.headers[header]
-        header_items = utils.parse_policy(header_value, **config.get('delimiters', {}), keys_only=True)
+        header_items = utils.parse_policy(header_value, **config.get("delimiters", {}), keys_only=True)
         header_items = {str(item).lower() for item in header_items}
 
         if not any(contain.lower() in header_items for contain in expected):
-            severity = config.get('severity', 'high')
+            severity = config.get("severity", "high")
             error_type = ErrorType.CONTAIN_ONE
             return ReportItem(severity, error_type, header, value=header_value, expected=expected)
 
     def _validate_must_avoid_for_policy_header(
-        self, config: CaseInsensitiveDict[str, Any], header: str,
+        self,
+        config: CaseInsensitiveDict[str, Any],
+        header: str,
     ) -> list[ReportItem]:
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
-        disallowed = base.get_expected_values(config, 'must-avoid', delimiter)
+        disallowed = base.get_expected_values(config, "must-avoid", delimiter)
 
         header_value = self.headers[header]
         header_items = []
 
-        directives = utils.parse_policy(header_value, **config['delimiters'])
+        directives = utils.parse_policy(header_value, **config["delimiters"])
         for directive in directives:
             try:
                 header_items.append(directive.key)
@@ -183,25 +215,42 @@ class HeaderValidator(base.ValidatorBase):
         for avoid in disallowed:
             if avoid.lower() in header_items:
                 non_compliant_directives = []
+                suppressed = False
                 for directive in directives:
                     try:
                         if avoid in directive.value:
+                            # CSP: unsafe-inline is neutralized by nonces/hashes in script-src/style-src
+                            if (
+                                avoid.lower() == "unsafe-inline"
+                                and directive.key.lower() in base._CSP_NONCE_HASH_DIRECTIVES
+                                and base.has_nonce_or_hash(directive.value)
+                            ):
+                                suppressed = True
+                                continue
+                            # CSP: strict-dynamic with nonces ignores scheme sources and 'self' in script-src
+                            if (
+                                avoid.lower() in base._CSP_STRICT_DYNAMIC_IGNORED
+                                and directive.key.lower() == "script-src"
+                                and base.has_strict_dynamic_with_nonce(directive.value)
+                            ):
+                                suppressed = True
+                                continue
                             non_compliant_directives.append(directive)
                     except AttributeError:
                         pass
 
-                if not non_compliant_directives:
+                if not non_compliant_directives and not suppressed:
                     anomalies.append(avoid)
                 else:
                     for ncd in non_compliant_directives:
                         directive, value = ncd.key, ncd.raw_value
                         ncd_item = {
-                            'value': value,
-                            'anomalies': ncd_items.get(directive, {}).get('anomalies', []) + [avoid]
+                            "value": value,
+                            "anomalies": ncd_items.get(directive, {}).get("anomalies", []) + [avoid],
                         }
                         ncd_items[directive] = ncd_item
 
-        severity = config.get('severity', 'high')
+        severity = config.get("severity", "high")
         error_type = ErrorType.AVOID
 
         if anomalies:
@@ -209,7 +258,15 @@ class HeaderValidator(base.ValidatorBase):
             report_items.append(item)
         if ncd_items:
             for directive in ncd_items:
-                value, anomalies = ncd_items[directive]['value'], ncd_items[directive]['anomalies']
-                item = ReportItem(severity, error_type, header, directive=directive, value=value, avoid=disallowed, anomalies=anomalies)  # noqa:E501
+                value, anomalies = ncd_items[directive]["value"], ncd_items[directive]["anomalies"]
+                item = ReportItem(
+                    severity,
+                    error_type,
+                    header,
+                    directive=directive,
+                    value=value,
+                    avoid=disallowed,
+                    anomalies=anomalies,
+                )  # noqa:E501
                 report_items.append(item)
         return report_items

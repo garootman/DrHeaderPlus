@@ -1,4 +1,5 @@
 """Main module and entry point for analysis."""
+
 import json
 import logging
 import os
@@ -8,16 +9,16 @@ import requests
 from requests.structures import CaseInsensitiveDict
 
 from drheader import utils
-from drheader.report import Reporter, ReportItem
+from drheader.report import ErrorType, Finding, Reporter, ReportItem
 from drheader.validators.base import ValidatorBase
 from drheader.validators.cookie_validator import CookieValidator
 from drheader.validators.directive_validator import DirectiveValidator
 from drheader.validators.header_validator import HeaderValidator
 
-_ALLOWED_HTTP_METHODS = ['delete', 'get', 'head', 'options', 'patch', 'post', 'put']
-_CROSS_ORIGIN_HEADERS = ['cross-origin-embedder-policy', 'cross-origin-opener-policy']
+_ALLOWED_HTTP_METHODS = ["delete", "get", "head", "options", "patch", "post", "put"]
+_CROSS_ORIGIN_HEADERS = ["cross-origin-embedder-policy", "cross-origin-opener-policy"]
 
-with open(os.path.join(os.path.dirname(__file__), 'resources/delimiters.json')) as delimiters:
+with open(os.path.join(os.path.dirname(__file__), "resources/delimiters.json")) as delimiters:
     _DELIMITERS = CaseInsensitiveDict(json.load(delimiters))
 
 
@@ -52,15 +53,16 @@ class Drheader:
         else:
             headers_to_analyse = _get_headers_from_url(url, headers=headers, **kwargs)
 
+        self.url = url
         self.cookies = CaseInsensitiveDict()
         self.headers = CaseInsensitiveDict(headers_to_analyse)
         self.reporter = Reporter()
 
-        for cookie in self.headers.get('set-cookie', []):
-            cookie = cookie.split('=', 1)
+        for cookie in self.headers.get("set-cookie", []):
+            cookie = cookie.split("=", 1)
             self.cookies[cookie[0]] = cookie[1]
 
-    def analyze(self, rules: dict[str, Any] | None = None, cross_origin_isolated: bool = False) -> list[dict[str, Any]]:
+    def analyze(self, rules: dict[str, Any] | None = None, cross_origin_isolated: bool = False) -> list[Finding]:
         """Analyses headers against a drHEADer ruleset.
 
         Args:
@@ -94,40 +96,106 @@ class Drheader:
                 logging.info(f"Cross-origin isolation validations are not enabled. Skipping header '{header}'")
                 continue
 
-            if header.lower() != 'set-cookie':
+            if header.lower() != "set-cookie":
                 self._validate_rules(rule_config, header_validator, header)
             elif header in self.headers:  # Validates global rules for cookies e.g. all cookies must contain 'secure'
                 for cookie in self.cookies:
                     self._validate_rules(rule_config, cookie_validator, header, cookie=cookie)
 
-            if 'directives' in rule_config and header in self.headers:
-                for directive, directive_config in rule_config['directives'].items():
+            if "directives" in rule_config and header in self.headers:
+                for directive, directive_config in rule_config["directives"].items():
                     self._validate_rules(directive_config, directive_validator, header, directive=directive)
-            if 'cookies' in rule_config and header.lower() == 'set-cookie':  # Validates individual rules for cookies e.g. cookie session_id must contain 'samesite=strict'  # noqa:E501
-                for cookie, cookie_config in rule_config['cookies'].items():
+            if (
+                "cookies" in rule_config and header.lower() == "set-cookie"
+            ):  # Validates individual rules for cookies e.g. cookie session_id must contain 'samesite=strict'  # noqa:E501
+                for cookie, cookie_config in rule_config["cookies"].items():
                     self._validate_rules(cookie_config, cookie_validator, header, cookie=cookie)
+
+        self._validate_samesite_secure()
+        self._validate_csp_report_only()
+        self._validate_cors_origin_reflection()
         return self.reporter.report
 
+    def _validate_samesite_secure(self) -> None:
+        """Validates that cookies with SameSite=None also have the Secure flag."""
+        for cookie_name, cookie_value in self.cookies.items():
+            cookie_attrs = {item.strip().lower() for item in cookie_value.split(";")}
+            has_samesite_none = any(attr.replace(" ", "") == "samesite=none" for attr in cookie_attrs)
+            has_secure = "secure" in cookie_attrs
+            if has_samesite_none and not has_secure:
+                item = ReportItem(
+                    severity="high",
+                    error_type=ErrorType.SAMESITE_NONE_NO_SECURE,
+                    header="Set-Cookie",
+                    cookie=cookie_name,
+                    value=f"{cookie_name}={cookie_value}",
+                )
+                self.reporter.add_item(item)
+
+    def _validate_cors_origin_reflection(self) -> None:
+        """Probes for CORS origin reflection in scan mode (URL provided)."""
+        if not self.url:
+            return
+
+        spoofed_origin = "https://evil.example.com"
+        try:
+            response = requests.get(self.url, headers={"Origin": spoofed_origin}, timeout=5)  # noqa: S113
+        except requests.RequestException:
+            return
+
+        acao = response.headers.get("Access-Control-Allow-Origin", "")
+        if acao == spoofed_origin:
+            has_credentials = response.headers.get("Access-Control-Allow-Credentials", "").lower() == "true"
+            severity = "high" if has_credentials else "medium"
+            value = acao
+            if has_credentials:
+                value += " (with Access-Control-Allow-Credentials: true)"
+            item = ReportItem(
+                severity=severity,
+                error_type=ErrorType.CORS_ORIGIN_REFLECTED,
+                header="Access-Control-Allow-Origin",
+                value=value,
+            )
+            self.reporter.add_item(item)
+
+    def _validate_csp_report_only(self) -> None:
+        """Flags Content-Security-Policy-Report-Only when no enforcing CSP header is present."""
+        has_report_only = "content-security-policy-report-only" in self.headers
+        has_enforcing = "content-security-policy" in self.headers
+        if has_report_only and not has_enforcing:
+            item = ReportItem(
+                severity="high",
+                error_type=ErrorType.REPORT_ONLY_NO_ENFORCING,
+                header="Content-Security-Policy-Report-Only",
+            )
+            self.reporter.add_item(item)
+
     def _validate_rules(
-        self, config: CaseInsensitiveDict[str, Any], validator: ValidatorBase, header: str, **kwargs: Any,
+        self,
+        config: CaseInsensitiveDict[str, Any],
+        validator: ValidatorBase,
+        header: str,
+        **kwargs: Any,
     ) -> None:
         """Validates rules for a single header, directive or cookie."""
-        config['delimiters'] = _DELIMITERS.get(header, {})
-        required = str(config['required']).strip().lower()
+        config["delimiters"] = _DELIMITERS.get(header, {})
+        required = str(config["required"]).strip().lower()
 
-        if required == 'true':
+        if required == "true":
             if report_item := validator.exists(config, header, **kwargs):
                 self._add_to_report(report_item)
             else:
                 self._validate_value_rules(config, validator, header, **kwargs)
-        elif required == 'false':
+        elif required == "false":
             if report_item := validator.not_exists(config, header, **kwargs):
                 self._add_to_report(report_item)
-        elif required == 'optional':
-            if cookie := kwargs.get('cookie'):
+        elif required == "optional":
+            if cookie := kwargs.get("cookie"):
                 is_present = cookie in self.cookies
-            elif directive := kwargs.get('directive'):
-                is_present = directive in utils.parse_policy(self.headers[header], **_DELIMITERS[header], keys_only=True)  # noqa: E501
+            elif directive := kwargs.get("directive"):
+                is_present = directive in utils.parse_policy(
+                    self.headers[header], **_DELIMITERS[header], keys_only=True
+                )  # noqa: E501
             else:
                 is_present = header in self.headers
 
@@ -135,26 +203,33 @@ class Drheader:
                 self._validate_value_rules(config, validator, header, **kwargs)
 
     def _validate_value_rules(
-        self, config: CaseInsensitiveDict[str, Any], validator: ValidatorBase, header: str, **kwargs: Any,
+        self,
+        config: CaseInsensitiveDict[str, Any],
+        validator: ValidatorBase,
+        header: str,
+        **kwargs: Any,
     ) -> None:
         """Validates rules for a single header, directive or cookie."""
-        if 'value' in config:
+        if "value" in config:
             if report_item := validator.value(config, header, **kwargs):
                 self._add_to_report(report_item)
-        elif 'value-any-of' in config:
+        elif "value-any-of" in config:
             if report_item := validator.value_any_of(config, header, **kwargs):
                 self._add_to_report(report_item)
-        elif 'value-one-of' in config:
+        elif "value-one-of" in config:
             if report_item := validator.value_one_of(config, header, **kwargs):
                 self._add_to_report(report_item)
+        elif "value-gte" in config:
+            if report_item := validator.value_gte(config, header, **kwargs):
+                self._add_to_report(report_item)
         else:
-            if 'must-avoid' in config:
+            if "must-avoid" in config:
                 if report_item := validator.must_avoid(config, header, **kwargs):
                     self._add_to_report(report_item)
-            if 'must-contain' in config:
+            if "must-contain" in config:
                 if report_item := validator.must_contain(config, header, **kwargs):
                     self._add_to_report(report_item)
-            if 'must-contain-one' in config:
+            if "must-contain-one" in config:
                 if report_item := validator.must_contain_one(config, header, **kwargs):
                     self._add_to_report(report_item)
 
@@ -167,19 +242,19 @@ class Drheader:
                 self.reporter.add_item(item)
 
 
-def _get_headers_from_url(url: str, method: str = 'head', **kwargs: Any) -> CaseInsensitiveDict[str, Any]:
+def _get_headers_from_url(url: str, method: str = "head", **kwargs: Any) -> CaseInsensitiveDict[str, Any]:
     """Retrieves headers from a URL."""
     if method.strip().lower() not in _ALLOWED_HTTP_METHODS:
         raise ValueError(f"'{method}' is not an allowed HTTP method")
 
-    if 'timeout' not in kwargs:
-        kwargs['timeout'] = 5
-    if 'allow_redirects' not in kwargs:
-        kwargs['allow_redirects'] = True
+    if "timeout" not in kwargs:
+        kwargs["timeout"] = 5
+    if "allow_redirects" not in kwargs:
+        kwargs["allow_redirects"] = True
 
     response = requests.request(method, url, **kwargs)  # noqa: S113
     response_headers = response.headers
-    response_headers['set-cookie'] = response.raw.headers.getlist('Set-Cookie')
+    response_headers["set-cookie"] = response.raw.headers.getlist("Set-Cookie")
     return response_headers
 
 

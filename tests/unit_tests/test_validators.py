@@ -1,3 +1,4 @@
+import dataclasses
 import unittest
 from unittest import mock
 
@@ -13,11 +14,11 @@ class TestBase(unittest.TestCase):
     def assert_report_items_equal(self, expected_report_item, observed_report_item, msg=None):
         does_validate = True
 
-        for field in expected_report_item._asdict():
-            expected = getattr(expected_report_item, field)
-            observed = getattr(observed_report_item, field)
+        for field in dataclasses.fields(expected_report_item):
+            expected = getattr(expected_report_item, field.name)
+            observed = getattr(observed_report_item, field.name)
             if not expected == observed:
-                msg += f"\tNon-matching values for field '{field}'. Expected: '{expected}'; Observed: '{observed}'\n"
+                msg += f"\tNon-matching values for field '{field.name}'. Expected: '{expected}'; Observed: '{observed}'\n"
                 does_validate = False
         if not does_validate:
             raise self.failureException(msg)

@@ -1,4 +1,5 @@
 """Base module for validators."""
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -76,8 +77,23 @@ class ValidatorBase(ABC):
         """
 
     @abstractmethod
+    def value_gte(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
+        """Validates that a numeric value meets a minimum threshold.
+
+        Args:
+            config (CaseInsensitiveDict): The configuration of the value-gte rule.
+            header (str): The header to validate.
+
+        Keyword Args:
+            directive (str): A named directive in {header} to validate.
+        """
+
+    @abstractmethod
     def must_avoid(
-        self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any,
+        self,
+        config: CaseInsensitiveDict[str, Any],
+        header: str,
+        **kwargs: Any,
     ) -> ReportItem | list[ReportItem] | None:
         """Validates that a header, directive or cookie does not contain any of a list of disallowed values.
 
@@ -117,6 +133,21 @@ class ValidatorBase(ABC):
         """
 
 
+_CSP_NONCE_HASH_DIRECTIVES = {"script-src", "style-src"}
+_CSP_STRICT_DYNAMIC_IGNORED = {"http:", "https:", "self"}
+
+
+def has_nonce_or_hash(values: list[str]) -> bool:
+    """Check if any CSP directive value is a nonce or hash source."""
+    return any(v.startswith(("nonce-", "sha256-", "sha384-", "sha512-")) for v in (val.lower() for val in values))
+
+
+def has_strict_dynamic_with_nonce(values: list[str]) -> bool:
+    """Check if strict-dynamic is present alongside nonces/hashes."""
+    has_sd = any(v.lower() == "strict-dynamic" for v in values)
+    return has_sd and has_nonce_or_hash(values)
+
+
 class UnsupportedValidationError(Exception):
     """Exception to be raised when an unsupported validation is called.
 
@@ -130,7 +161,7 @@ class UnsupportedValidationError(Exception):
 
 
 def get_delimiter(config: CaseInsensitiveDict[str, Any], delimiter_type: str) -> str | None:
-    if delimiters := config.get('delimiters'):
+    if delimiters := config.get("delimiters"):
         return delimiters.get(delimiter_type)
 
 

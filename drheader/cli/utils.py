@@ -7,6 +7,7 @@ import tabulate
 from junitparser import Failure, JUnitXml, TestCase, TestSuite
 
 from drheader import utils
+from drheader.report import Finding
 
 
 def get_rules(
@@ -18,12 +19,12 @@ def get_rules(
         return utils.default_rules()
 
 
-def tabulate_report(report: list[dict[str, Any]]) -> str:
+def tabulate_report(report: list[Finding]) -> str:
     rows = []
     final_string = ''
 
-    for validation_error in report:
-        values = [[k, v] for k, v in validation_error.items()]
+    for finding in report:
+        values = [[k, v] for k, v in finding.to_dict().items()]
         rows.append(values)
     for validation_error in rows:
         final_string += '----\n'
@@ -32,7 +33,7 @@ def tabulate_report(report: list[dict[str, Any]]) -> str:
     return final_string
 
 
-def file_junit_report(rules: dict[str, Any], report: list[dict[str, Any]]) -> None:
+def file_junit_report(rules: dict[str, Any], report: list[Finding]) -> None:
     """Generates a JUnit XML report from a scan result.
 
     Args:
@@ -43,12 +44,13 @@ def file_junit_report(rules: dict[str, Any], report: list[dict[str, Any]]) -> No
 
     for header in rules:
         test_case = None
-        for validation_error in report:
-            if (title := validation_error.get('rule')).startswith(header):
-                validation_error = {k: v for k, v in validation_error.items() if k != 'rule'}
-                test_case = TestCase(title)
-                failure = Failure(message=validation_error.pop('message'))
-                failure.text = str(validation_error)
+        for finding in report:
+            if finding.rule.startswith(header):
+                finding_dict = finding.to_dict()
+                del finding_dict['rule']
+                test_case = TestCase(finding.rule)
+                failure = Failure(message=finding_dict.pop('message'))
+                failure.text = str(finding_dict)
                 test_case.result = [failure]
                 test_suite.add_testcase(test_case)
         if not test_case:

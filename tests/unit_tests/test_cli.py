@@ -8,8 +8,14 @@ from click.testing import CliRunner
 from xmlunittest import XmlTestMixin
 
 from drheader.cli import cli, utils
+from drheader.report import Finding
 
 _RESOURCES_DIR = os.path.join(os.path.dirname(__file__), '../test_resources')
+
+
+def _dicts_to_findings(dicts: list[dict]) -> list[Finding]:
+    """Convert a list of report dicts to Finding objects."""
+    return [Finding(**d) for d in dicts]
 
 
 # noinspection PyTypeChecker
@@ -17,7 +23,8 @@ class TestCli(TestCase):
 
     def setUp(self):
         with open(os.path.join(_RESOURCES_DIR, 'report.json')) as report:
-            self.report = json.load(report)
+            self.report_dicts = json.load(report)
+        self.report = _dicts_to_findings(self.report_dicts)
 
     @mock.patch('drheader.cli.cli.Drheader')
     def test_compare_single__should_return_exit_code_0_on_clean_report(self, drheader_mock):
@@ -51,7 +58,7 @@ class TestCli(TestCase):
         file = os.path.join(_RESOURCES_DIR, 'headers_ko.json')
         response = CliRunner().invoke(cli.main, ['compare', 'single', '--output', 'json', file])
 
-        assert json.loads(response.output) == self.report
+        assert json.loads(response.output) == self.report_dicts
 
     @mock.patch('drheader.cli.cli.Drheader')
     def test_compare_bulk__should_return_exit_code_0_on_clean_report(self, drheader_mock):
@@ -78,7 +85,7 @@ class TestCli(TestCase):
         file = os.path.join(_RESOURCES_DIR, 'headers_bulk_ko.json')
         response = CliRunner().invoke(cli.main, ['compare', 'bulk', '--output', 'json', file])
 
-        assert json.loads(response.output)[0]['report'] == self.report
+        assert json.loads(response.output)[0]['report'] == self.report_dicts
 
     @mock.patch('drheader.cli.cli.Drheader')
     def test_scan_single__should_return_exit_code_0_on_clean_report(self, drheader_mock):
@@ -105,7 +112,7 @@ class TestCli(TestCase):
         drheader_mock.return_value.analyze.return_value = self.report
         response = CliRunner().invoke(cli.main, ['scan', 'single', '--output', 'json', 'https://example.com'])
 
-        assert json.loads(response.output) == self.report
+        assert json.loads(response.output) == self.report_dicts
 
     @mock.patch('drheader.cli.cli.Drheader')
     def test_scan_bulk__should_return_exit_code_0_on_clean_report(self, drheader_mock):
@@ -158,7 +165,7 @@ class TestCli(TestCase):
         file = os.path.join(_RESOURCES_DIR, 'bulk_scan.json')
         response = CliRunner().invoke(cli.main, ['scan', 'bulk', '--output', 'json', file])
 
-        assert json.loads(response.output)[0]['report'] == self.report
+        assert json.loads(response.output)[0]['report'] == self.report_dicts
 
     @mock.patch('drheader.cli.cli.Drheader')
     def test_scan_bulk__should_not_fail_on_error(self, drheader_mock):
@@ -181,7 +188,7 @@ class TestUtils(TestCase, XmlTestMixin):
 
     def setUp(self):
         with open(os.path.join(_RESOURCES_DIR, 'report.json')) as report:
-            self.report = json.load(report)
+            self.report = _dicts_to_findings(json.load(report))
         with open(os.path.join(_RESOURCES_DIR, 'default_rules.yml')) as rules:
             self.rules = yaml.safe_load(rules)
 
@@ -194,19 +201,19 @@ class TestUtils(TestCase, XmlTestMixin):
         assert rules == self.rules
 
     def test_file_junit_report__should_create_test_case_for_header(self):
-        assert any(item['rule'] == 'Cache-Control' for item in self.report)
+        assert any(item.rule == 'Cache-Control' for item in self.report)
 
         xml_tree = self.assertXmlDocument(self.junit_xml)
         self.assertXpathsExist(xml_tree, ['./testsuite/testcase[@name="Cache-Control"]'])
 
     def test_file_junit_report__should_create_test_case_for_directive(self):
-        assert any(item['rule'] == 'Content-Security-Policy - default-src' for item in self.report)
+        assert any(item.rule == 'Content-Security-Policy - default-src' for item in self.report)
 
         xml_tree = self.assertXmlDocument(self.junit_xml)
         self.assertXpathsExist(xml_tree, ['./testsuite/testcase[@name="Content-Security-Policy - default-src"]'])
 
     def test_file_junit_report__should_create_test_case_for_cookie(self):
-        assert any(item['rule'] == 'Set-Cookie - session_id' for item in self.report)
+        assert any(item.rule == 'Set-Cookie - session_id' for item in self.report)
 
         xml_tree = self.assertXmlDocument(self.junit_xml)
         self.assertXpathsExist(xml_tree, ['./testsuite/testcase[@name="Set-Cookie - session_id"]'])

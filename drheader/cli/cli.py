@@ -65,7 +65,7 @@ def single(file, cross_origin_isolated, debug, junit, merge, output, rules_file,
     report = scanner.analyze(rules=rules, cross_origin_isolated=cross_origin_isolated)
 
     if output == 'json':
-        click.echo(json.dumps(report, indent=4))
+        click.echo(json.dumps([f.to_dict() for f in report], indent=4))
     else:
         click.echo()
         if not report:
@@ -111,7 +111,8 @@ def bulk(file, cross_origin_isolated, debug, merge, output, rules_file, rules_ur
             audit.append({'url': target['url'], 'report': [], 'error': str(e)})
 
     if output == 'json':
-        click.echo(json.dumps(audit, indent=4))
+        json_audit = [{**t, 'report': [f.to_dict() for f in t['report']]} for t in audit]
+        click.echo(json.dumps(json_audit, indent=4))
     else:
         for target in audit:
             click.echo()
@@ -165,7 +166,7 @@ def single(target_url, request_args, cross_origin_isolated, debug, junit, merge,
     report = scanner.analyze(rules=rules, cross_origin_isolated=cross_origin_isolated)
 
     if output == 'json':
-        click.echo(json.dumps(report, indent=4))
+        click.echo(json.dumps([f.to_dict() for f in report], indent=4))
     else:
         click.echo()
         if not report:
@@ -222,7 +223,8 @@ def bulk(file, cross_origin_isolated, debug, file_format, merge, output, rules_f
             audit.append({'url': target['url'], 'report': [], 'error': str(e)})
 
     if output == 'json':
-        click.echo(json.dumps(audit, indent=4))
+        json_audit = [{**t, 'report': [f.to_dict() for f in t['report']]} for t in audit]
+        click.echo(json.dumps(json_audit, indent=4))
     else:
         for target in audit:
             click.echo()
