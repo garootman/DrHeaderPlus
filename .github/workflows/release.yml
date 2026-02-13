@@ -8,7 +8,6 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    environment: pypi
 
     permissions:
       contents: write
@@ -33,4 +32,6 @@ jobs:
           generateReleaseNotes: true
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
