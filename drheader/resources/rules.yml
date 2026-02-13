@@ -1,3 +1,8 @@
+Access-Control-Allow-Origin:
+    Required: Optional
+    Severity: high
+    Must-Avoid:
+        - "*"
 Cache-Control:
     Required: True
     Severity: high
@@ -10,9 +15,48 @@ Content-Security-Policy:
     Must-Avoid:
         - unsafe-inline
         - unsafe-eval
+        - "data:"
+        - "http:"
+        - "ftp:"
     Directives:
         default-src:
             Required: True
+            Value-One-Of:
+                - none
+                - self
+        script-src:
+            Required: Optional
+            Must-Avoid:
+                - unsafe-inline
+                - unsafe-eval
+                - "data:"
+                - "http:"
+                - "https:"
+                - "*"
+        style-src:
+            Required: Optional
+            Must-Avoid:
+                - unsafe-eval
+                - "data:"
+        object-src:
+            Required: Optional
+            Must-Avoid:
+                - "*"
+                - "http:"
+                - "https:"
+                - "data:"
+        form-action:
+            Required: Optional
+            Value-One-Of:
+                - none
+                - self
+        base-uri:
+            Required: Optional
+            Value-One-Of:
+                - none
+                - self
+        frame-ancestors:
+            Required: Optional
             Value-One-Of:
                 - none
                 - self

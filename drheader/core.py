@@ -112,7 +112,7 @@ class Drheader:
         self, config: CaseInsensitiveDict[str, Any], validator: ValidatorBase, header: str, **kwargs: Any,
     ) -> None:
         """Validates rules for a single header, directive or cookie."""
-        config['delimiters'] = _DELIMITERS.get(header)
+        config['delimiters'] = _DELIMITERS.get(header, {})
         required = str(config['required']).strip().lower()
 
         if required == 'true':

@@ -1,88 +1,93 @@
+Access-Control-Allow-Origin:
+    Required: Optional
+    Severity: high
+    Must-Avoid:
+    - '*'
 Cache-Control:
-    Required: True
+    Required: true
     Severity: high
     Value:
-        - no-store
-        - max-age=0
+    - no-store
+    - max-age=0
 Content-Security-Policy:
-    Required: True
+    Required: true
 Cross-Origin-Embedder-Policy:
-    Required: True
+    Required: true
     Severity: high
     Value: require-corp
 Cross-Origin-Opener-Policy:
-    Required: True
+    Required: true
     Severity: high
     Value: same-origin
 Cross-Origin-Resource-Policy:
-    Required: True
+    Required: true
     Severity: medium
     Value: same-origin
 Permissions-Policy:
-    Required: True
+    Required: true
     Severity: medium
 Pragma:
     Required: Optional
     Severity: low
     Value: no-cache
 Referrer-Policy:
-    Required: True
+    Required: true
     Severity: medium
     Value-One-Of:
-        - strict-origin
-        - strict-origin-when-cross-origin
-        - no-referrer
+    - strict-origin
+    - strict-origin-when-cross-origin
+    - no-referrer
 Server:
-    Required: False
+    Required: false
     Severity: medium
 Set-Cookie:
     Required: Optional
     Severity: high
     Must-Contain:
-        - HttpOnly
-        - Secure
-        - SameSite
+    - HttpOnly
+    - Secure
+    - SameSite
 Strict-Transport-Security:
-    Required: True
+    Required: true
     Severity: high
     Value:
-        - max-age=31536000
-        - includeSubDomains
+    - max-age=31536000
+    - includeSubDomains
 User-Agent:
-    Required: False
+    Required: false
     Severity: low
 X-AspNet-Version:
-    Required: False
+    Required: false
     Severity: medium
 X-Client-IP:
-    Required: False
+    Required: false
     Severity: medium
 X-Content-Type-Options:
-    Required: True
+    Required: true
     Severity: medium
     Value: nosniff
 X-Forwarded-For:
-    Required: False
+    Required: false
     Severity: medium
 X-Frame-Options:
-    Required: True
+    Required: true
     Severity: medium
     Value-One-Of:
-        - DENY
-        - SAMEORIGIN
+    - DENY
+    - SAMEORIGIN
 X-Generator:
-    Required: False
+    Required: false
     Severity: low
 X-Permitted-Cross-Domain-Policies:
-    Required: True
+    Required: true
     Severity: low
     Value: none
 X-Powered-By:
-    Required: True
+    Required: true
 X-XSS-Protection:
-    Required: True
+    Required: true
     Severity: low
     Value: 0
 New-Invented-Header:
-    Required: True
+    Required: true
     Value: required-value

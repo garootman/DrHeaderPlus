@@ -65,6 +65,213 @@ class TestDefaultRules(unittest.TestCase):
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
 
+    def test_csp__should_avoid_data_scheme(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; img-src data:")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - img-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': 'data:',
+            'avoid': ['unsafe-inline', 'unsafe-eval', 'data:', 'http:', 'ftp:'],
+            'anomalies': ['data:']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp__should_avoid_http_scheme(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; img-src http:")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - img-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': 'http:',
+            'avoid': ['unsafe-inline', 'unsafe-eval', 'data:', 'http:', 'ftp:'],
+            'anomalies': ['http:']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_script_src__should_avoid_unsafe_inline(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; script-src 'unsafe-inline'")
+
+        report = utils.process_test(headers=headers)
+        csp_script_violations = [
+            item for item in report
+            if item['rule'] == 'Content-Security-Policy - script-src'
+        ]
+        anomalies = []
+        for item in csp_script_violations:
+            anomalies.extend(item.get('anomalies', []))
+        self.assertIn('unsafe-inline', anomalies)
+
+    def test_csp_script_src__should_avoid_data_scheme(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; script-src 'self' data:")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - script-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': "'self' data:",
+            'avoid': ['unsafe-inline', 'unsafe-eval', 'data:', 'http:', 'https:', '*'],
+            'anomalies': ['data:']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_script_src__should_avoid_https_scheme(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; script-src https:")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - script-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': 'https:',
+            'avoid': ['unsafe-inline', 'unsafe-eval', 'data:', 'http:', 'https:', '*'],
+            'anomalies': ['https:']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_script_src__should_avoid_wildcard(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; script-src *")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - script-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': '*',
+            'avoid': ['unsafe-inline', 'unsafe-eval', 'data:', 'http:', 'https:', '*'],
+            'anomalies': ['*']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_script_src__should_pass_with_safe_values(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; script-src 'self'")
+
+        report = utils.process_test(headers=headers)
+        csp_script_violations = [
+            item for item in report
+            if item['rule'] == 'Content-Security-Policy - script-src'
+        ]
+        self.assertEqual(len(csp_script_violations), 0, msg=utils.build_error_message(report))
+
+    def test_csp_style_src__should_avoid_data_scheme(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; style-src data:")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - style-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': 'data:',
+            'avoid': ['unsafe-eval', 'data:'],
+            'anomalies': ['data:']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_object_src__should_avoid_wildcard(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; object-src *")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - object-src',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': '*',
+            'avoid': ['*', 'http:', 'https:', 'data:'],
+            'anomalies': ['*']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_form_action__should_enforce_safe_values(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; form-action https://evil.com")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - form-action',
+            'message': 'Value does not match security policy. Exactly one of the expected items was expected',
+            'severity': 'high',
+            'value': 'https://evil.com',
+            'expected': ['none', 'self']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_form_action__should_pass_with_self(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; form-action 'self'")
+
+        report = utils.process_test(headers=headers)
+        form_violations = [item for item in report if item['rule'] == 'Content-Security-Policy - form-action']
+        self.assertEqual(len(form_violations), 0, msg=utils.build_error_message(report))
+
+    def test_csp_base_uri__should_enforce_safe_values(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; base-uri https://evil.com")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - base-uri',
+            'message': 'Value does not match security policy. Exactly one of the expected items was expected',
+            'severity': 'high',
+            'value': 'https://evil.com',
+            'expected': ['none', 'self']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_frame_ancestors__should_enforce_safe_values(self):
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'; frame-ancestors https://evil.com")
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Content-Security-Policy - frame-ancestors',
+            'message': 'Value does not match security policy. Exactly one of the expected items was expected',
+            'severity': 'high',
+            'value': 'https://evil.com',
+            'expected': ['none', 'self']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Content-Security-Policy'))
+
+    def test_csp_directives__should_not_validate_when_absent(self):
+        """Optional directives should not produce violations when not present in CSP."""
+        headers = utils.add_or_modify_header('Content-Security-Policy', "default-src 'none'")
+
+        report = utils.process_test(headers=headers)
+        directive_violations = [
+            item for item in report
+            if item['rule'].startswith('Content-Security-Policy -')
+            and item['rule'] != 'Content-Security-Policy - default-src'
+        ]
+        self.assertEqual(len(directive_violations), 0, msg=utils.build_error_message(report))
+
+    def test_acao__should_avoid_wildcard(self):
+        headers = utils.add_or_modify_header('Access-Control-Allow-Origin', '*')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Access-Control-Allow-Origin',
+            'message': 'Must-Avoid directive included',
+            'severity': 'high',
+            'value': '*',
+            'avoid': ['*'],
+            'anomalies': ['*']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Access-Control-Allow-Origin'))
+
+    def test_acao__should_not_flag_specific_origin(self):
+        headers = utils.add_or_modify_header('Access-Control-Allow-Origin', 'https://example.com')
+
+        report = utils.process_test(headers=headers)
+        acao_violations = [item for item in report if item['rule'] == 'Access-Control-Allow-Origin']
+        self.assertEqual(len(acao_violations), 0, msg=utils.build_error_message(report))
+
+    def test_acao__should_not_require_presence(self):
+        headers = utils.get_headers()  # No ACAO header present
+
+        report = utils.process_test(headers=headers)
+        acao_violations = [item for item in report if item['rule'] == 'Access-Control-Allow-Origin']
+        self.assertEqual(len(acao_violations), 0, msg=utils.build_error_message(report))
+
     def test_coep__should_exist_when_cross_origin_isolated_is_true(self):
         headers = utils.delete_headers('Cross-Origin-Embedder-Policy')
 
