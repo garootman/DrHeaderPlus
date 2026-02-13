@@ -1,6 +1,11 @@
 """Validator module for directives."""
+from typing import Any
+
+from requests.structures import CaseInsensitiveDict
+
 from drheader import utils
 from drheader.report import ErrorType, ReportItem
+from drheader.utils import KeyValueDirective
 from drheader.validators import base
 
 _DELIMITER_TYPE = 'value_delimiter'
@@ -13,11 +18,11 @@ class DirectiveValidator(base.ValidatorBase):
         headers (CaseInsensitiveDict): The headers to analyse.
     """
 
-    def __init__(self, headers):
+    def __init__(self, headers: CaseInsensitiveDict[str, Any]) -> None:
         """Initialises a DirectiveValidator instance with headers."""
         self.headers = headers
 
-    def exists(self, config, header, **kwargs):
+    def exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -42,7 +47,7 @@ class DirectiveValidator(base.ValidatorBase):
             else:
                 return ReportItem(severity, error_type, header, directive=directive)
 
-    def not_exists(self, config, header, **kwargs):
+    def not_exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -54,7 +59,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.DISALLOWED
             return ReportItem(severity, error_type, header, directive=directive)
 
-    def value(self, config, header, **kwargs):
+    def value(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -70,7 +75,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, expected=expected, delimiter=delimiter)  # noqa:E501
 
-    def value_any_of(self, config, header, **kwargs):
+    def value_any_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -92,7 +97,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE_ANY
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, expected=accepted, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
 
-    def value_one_of(self, config, header, **kwargs):
+    def value_one_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -108,7 +113,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE_ONE
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, expected=accepted)
 
-    def must_avoid(self, config, header, **kwargs):
+    def must_avoid(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -129,7 +134,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.AVOID
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, avoid=disallowed, anomalies=anomalies)  # noqa:E501
 
-    def must_contain(self, config, header, **kwargs):
+    def must_contain(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -150,7 +155,7 @@ class DirectiveValidator(base.ValidatorBase):
             error_type = ErrorType.CONTAIN
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, expected=expected, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
 
-    def must_contain_one(self, config, header, **kwargs):
+    def must_contain_one(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         directive = kwargs['directive']
 
@@ -167,7 +172,9 @@ class DirectiveValidator(base.ValidatorBase):
             return ReportItem(severity, error_type, header, directive=directive, value=kvd.raw_value, expected=expected)
 
 
-def _get_key_value_directive(directive_name, directives_list):
+def _get_key_value_directive(
+    directive_name: str, directives_list: list[str | KeyValueDirective],
+) -> KeyValueDirective | None:
     for directive in directives_list:
         if isinstance(directive, utils.KeyValueDirective) and directive.key.lower() == directive_name.lower():
             return directive

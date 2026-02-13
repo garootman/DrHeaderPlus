@@ -1,4 +1,8 @@
 """Validator module for cookies."""
+from typing import Any, Never
+
+from requests.structures import CaseInsensitiveDict
+
 from drheader import utils
 from drheader.report import ErrorType, ReportItem
 from drheader.validators import base
@@ -13,11 +17,11 @@ class CookieValidator(base.ValidatorBase):
         cookies (CaseInsensitiveDict): The cookies to analyse.
     """
 
-    def __init__(self, cookies):
+    def __init__(self, cookies: CaseInsensitiveDict[str, str]) -> None:
         """Initialises a CookieValidator instance with cookies."""
         self.cookies = cookies
 
-    def exists(self, config, header, **kwargs):
+    def exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         cookie = kwargs['cookie']
 
@@ -26,7 +30,7 @@ class CookieValidator(base.ValidatorBase):
             error_type = ErrorType.REQUIRED
             return ReportItem(severity, error_type, header, cookie=cookie)
 
-    def not_exists(self, config, header, **kwargs):
+    def not_exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         cookie = kwargs['cookie']
 
@@ -35,7 +39,7 @@ class CookieValidator(base.ValidatorBase):
             error_type = ErrorType.DISALLOWED
             return ReportItem(severity, error_type, header, cookie=cookie)
 
-    def value(self, config, header, **kwargs):
+    def value(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> Never:
         """Method not supported.
 
         Raises:
@@ -43,7 +47,7 @@ class CookieValidator(base.ValidatorBase):
         """
         raise base.UnsupportedValidationError("'Value' validations are not supported for cookies")
 
-    def value_any_of(self, config, header, **kwargs):
+    def value_any_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> Never:
         """Method not supported.
 
         Raises:
@@ -51,7 +55,7 @@ class CookieValidator(base.ValidatorBase):
         """
         raise base.UnsupportedValidationError("'Value-Any-Of' validations are not supported for cookies")
 
-    def value_one_of(self, config, header, **kwargs):
+    def value_one_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> Never:
         """Method not supported.
 
         Raises:
@@ -59,7 +63,7 @@ class CookieValidator(base.ValidatorBase):
         """
         raise base.UnsupportedValidationError("'Value-One-Of' validations are not supported for cookies")
 
-    def must_avoid(self, config, header, **kwargs):
+    def must_avoid(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         cookie = kwargs['cookie']
 
@@ -80,7 +84,7 @@ class CookieValidator(base.ValidatorBase):
             error_type = ErrorType.AVOID
             return ReportItem(severity, error_type, header, cookie=cookie, value=cookie_value, avoid=disallowed, anomalies=anomalies)  # noqa:E501
 
-    def must_contain(self, config, header, **kwargs):
+    def must_contain(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         cookie = kwargs['cookie']
 
@@ -101,7 +105,7 @@ class CookieValidator(base.ValidatorBase):
             error_type = ErrorType.CONTAIN
             return ReportItem(severity, error_type, header, cookie=cookie, value=cookie_value, expected=expected, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
 
-    def must_contain_one(self, config, header, **kwargs):
+    def must_contain_one(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         cookie = kwargs['cookie']
 

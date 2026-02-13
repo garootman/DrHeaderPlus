@@ -2,12 +2,14 @@
 import json
 import logging
 import os
+from typing import Any
 
 import requests
 from requests.structures import CaseInsensitiveDict
 
 from drheader import utils
-from drheader.report import Reporter
+from drheader.report import Reporter, ReportItem
+from drheader.validators.base import ValidatorBase
 from drheader.validators.cookie_validator import CookieValidator
 from drheader.validators.directive_validator import DirectiveValidator
 from drheader.validators.header_validator import HeaderValidator
@@ -28,7 +30,7 @@ class Drheader:
         reporter (Reporter): Reporter instance that generates and holds the final report.
     """
 
-    def __init__(self, headers=None, url=None, **kwargs):
+    def __init__(self, headers: dict[str, Any] | str | None = None, url: str | None = None, **kwargs: Any) -> None:
         """Initialises a Drheader instance.
 
         At least one of <headers> and <url> must be defined. The value passed in <headers> is treated differently
@@ -58,7 +60,7 @@ class Drheader:
             cookie = cookie.split('=', 1)
             self.cookies[cookie[0]] = cookie[1]
 
-    def analyze(self, rules=None, cross_origin_isolated=False):
+    def analyze(self, rules: dict[str, Any] | None = None, cross_origin_isolated: bool = False) -> list[dict[str, Any]]:
         """Analyses headers against a drHEADer ruleset.
 
         Args:
@@ -106,7 +108,9 @@ class Drheader:
                     self._validate_rules(cookie_config, cookie_validator, header, cookie=cookie)
         return self.reporter.report
 
-    def _validate_rules(self, config, validator, header, **kwargs):
+    def _validate_rules(
+        self, config: CaseInsensitiveDict[str, Any], validator: ValidatorBase, header: str, **kwargs: Any,
+    ) -> None:
         """Validates rules for a single header, directive or cookie."""
         config['delimiters'] = _DELIMITERS.get(header)
         required = str(config['required']).strip().lower()
@@ -130,7 +134,9 @@ class Drheader:
             if is_present:
                 self._validate_value_rules(config, validator, header, **kwargs)
 
-    def _validate_value_rules(self, config, validator, header, **kwargs):
+    def _validate_value_rules(
+        self, config: CaseInsensitiveDict[str, Any], validator: ValidatorBase, header: str, **kwargs: Any,
+    ) -> None:
         """Validates rules for a single header, directive or cookie."""
         if 'value' in config:
             if report_item := validator.value(config, header, **kwargs):
@@ -152,7 +158,7 @@ class Drheader:
                 if report_item := validator.must_contain_one(config, header, **kwargs):
                     self._add_to_report(report_item)
 
-    def _add_to_report(self, report_item):
+    def _add_to_report(self, report_item: ReportItem | list[ReportItem]) -> None:
         """Adds a finding or list of findings to the final report."""
         try:
             self.reporter.add_item(report_item)
@@ -161,7 +167,7 @@ class Drheader:
                 self.reporter.add_item(item)
 
 
-def _get_headers_from_url(url, method='head', **kwargs):
+def _get_headers_from_url(url: str, method: str = 'head', **kwargs: Any) -> CaseInsensitiveDict[str, Any]:
     """Retrieves headers from a URL."""
     if method.strip().lower() not in _ALLOWED_HTTP_METHODS:
         raise ValueError(f"'{method}' is not an allowed HTTP method")
@@ -177,7 +183,7 @@ def _get_headers_from_url(url, method='head', **kwargs):
     return response_headers
 
 
-def _translate_to_case_insensitive_dict(dict_to_translate):
+def _translate_to_case_insensitive_dict(dict_to_translate: dict[str, Any]) -> CaseInsensitiveDict[str, Any]:
     """Recursively transforms a dict into a case-insensitive dict."""
     for key, value in dict_to_translate.items():
         if isinstance(value, dict):

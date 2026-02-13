@@ -1,4 +1,8 @@
 """Validator module for headers."""
+from typing import Any
+
+from requests.structures import CaseInsensitiveDict
+
 from drheader import utils
 from drheader.report import ErrorType, ReportItem
 from drheader.validators import base
@@ -15,11 +19,11 @@ class HeaderValidator(base.ValidatorBase):
         headers (CaseInsensitiveDict): The headers to analyse.
     """
 
-    def __init__(self, headers):
+    def __init__(self, headers: CaseInsensitiveDict[str, Any]) -> None:
         """Initialises a HeaderValidator instance with headers."""
         self.headers = headers
 
-    def exists(self, config, header, **kwargs):
+    def exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         if header not in self.headers:
             severity = config.get('severity', 'high')
@@ -39,14 +43,14 @@ class HeaderValidator(base.ValidatorBase):
             else:
                 return ReportItem(severity, error_type, header)
 
-    def not_exists(self, config, header, **kwargs):
+    def not_exists(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         if header in self.headers:
             severity = config.get('severity', 'high')
             error_type = ErrorType.DISALLOWED
             return ReportItem(severity, error_type, header)
 
-    def value(self, config, header, **kwargs):
+    def value(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         expected = base.get_expected_values(config, 'value', delimiter)
@@ -67,7 +71,7 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE
             return ReportItem(severity, error_type, header, value=header_value, expected=expected, delimiter=delimiter)
 
-    def value_any_of(self, config, header, **kwargs):
+    def value_any_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         accepted = base.get_expected_values(config, 'value-any-of', delimiter)
@@ -87,7 +91,7 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE_ANY
             return ReportItem(severity, error_type, header, value=header_value, expected=accepted, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
 
-    def value_one_of(self, config, header, **kwargs):
+    def value_one_of(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         accepted = base.get_expected_values(config, 'value-one-of', delimiter)
@@ -100,7 +104,9 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.VALUE_ONE
             return ReportItem(severity, error_type, header, value=header_value, expected=accepted)
 
-    def must_avoid(self, config, header, **kwargs):
+    def must_avoid(
+        self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any,
+    ) -> ReportItem | list[ReportItem] | None:
         """See base class."""
         if header.lower() in _POLICY_HEADERS:
             return self._validate_must_avoid_for_policy_header(config, header)
@@ -122,7 +128,7 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.AVOID
             return ReportItem(severity, error_type, header, value=header_value, avoid=disallowed, anomalies=anomalies)
 
-    def must_contain(self, config, header, **kwargs):
+    def must_contain(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         expected = base.get_expected_values(config, 'must-contain', delimiter)
@@ -141,7 +147,7 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.CONTAIN
             return ReportItem(severity, error_type, header, value=header_value, expected=expected, anomalies=anomalies, delimiter=delimiter)  # noqa:E501
 
-    def must_contain_one(self, config, header, **kwargs):
+    def must_contain_one(self, config: CaseInsensitiveDict[str, Any], header: str, **kwargs: Any) -> ReportItem | None:
         """See base class."""
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         expected = base.get_expected_values(config, 'must-contain-one', delimiter)
@@ -155,7 +161,9 @@ class HeaderValidator(base.ValidatorBase):
             error_type = ErrorType.CONTAIN_ONE
             return ReportItem(severity, error_type, header, value=header_value, expected=expected)
 
-    def _validate_must_avoid_for_policy_header(self, config, header):
+    def _validate_must_avoid_for_policy_header(
+        self, config: CaseInsensitiveDict[str, Any], header: str,
+    ) -> list[ReportItem]:
         delimiter = base.get_delimiter(config, _DELIMITER_TYPE)
         disallowed = base.get_expected_values(config, 'must-avoid', delimiter)
 

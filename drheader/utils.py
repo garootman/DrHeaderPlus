@@ -1,7 +1,7 @@
 """Utility functions for core module."""
 import io
 import os
-from typing import NamedTuple
+from typing import IO, Any, NamedTuple
 
 import requests
 import yaml
@@ -9,18 +9,20 @@ import yaml
 
 class KeyValueDirective(NamedTuple):
     key: str
-    value: list
-    raw_value: str = None
+    value: list[str]
+    raw_value: str | None = None
 
 
-def default_rules():
+def default_rules() -> dict[str, Any]:
     """Returns the drHEADer default ruleset."""
     with open(os.path.join(os.path.dirname(__file__), 'resources/rules.yml')) as rules:
         rules = yaml.safe_load(rules.read())
         return rules
 
 
-def load_rules(rules_file=None, rules_uri=None, merge_default=False):
+def load_rules(
+    rules_file: IO[Any] | None = None, rules_uri: str | None = None, merge_default: bool = False,
+) -> dict[str, Any]:
     """Returns a drHEADer ruleset from a file.
 
     The loaded ruleset can be configured to be merged with the default drHEADer rules. If a rule exists in both the
@@ -45,7 +47,7 @@ def load_rules(rules_file=None, rules_uri=None, merge_default=False):
     return _merge_with_default_rules(rules) if merge_default else rules
 
 
-def parse_policy(policy, item_delimiter=None, key_value_delimiter=None, value_delimiter=None, strip_chars=None, keys_only=False):  # noqa: E501
+def parse_policy(policy: str, item_delimiter: str | None = None, key_value_delimiter: str | None = None, value_delimiter: str | None = None, strip_chars: str | None = None, keys_only: bool = False) -> list[str | KeyValueDirective]:  # noqa: E501
     """Parses a policy string into a list of individual directives.
 
     Args:
@@ -77,20 +79,22 @@ def parse_policy(policy, item_delimiter=None, key_value_delimiter=None, value_de
     return directives
 
 
-def get_rules_from_uri(uri):
+def get_rules_from_uri(uri: str) -> io.BytesIO:
     response = requests.get(uri, timeout=5)
     response.raise_for_status()
     return io.BytesIO(response.content)
 
 
-def _merge_with_default_rules(rules):
+def _merge_with_default_rules(rules: dict[str, Any]) -> dict[str, Any]:
     merged_ruleset = default_rules()
     for rule in rules:
         merged_ruleset[rule] = rules[rule]
     return merged_ruleset
 
 
-def _extract_key_value_directive(directive, value_delimiter, strip_chars):
+def _extract_key_value_directive(
+    directive: list[str], value_delimiter: str | None, strip_chars: str | None,
+) -> KeyValueDirective:
     if value_delimiter:
         value_items = list(filter(lambda s: s.strip(), directive[1].split(value_delimiter)))
         value = [item.strip(strip_chars) for item in value_items]

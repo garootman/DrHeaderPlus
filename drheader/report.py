@@ -1,6 +1,6 @@
 """Primary module for report generation and storage."""
 from enum import Enum
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 
 class Reporter:
@@ -10,11 +10,11 @@ class Reporter:
         report (list): The report detailing validation failures encountered during a scan.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialises a Reporter instance with an empty report."""
-        self.report = []
+        self.report: list[dict[str, Any]] = []
 
-    def add_item(self, item):
+    def add_item(self, item: 'ReportItem') -> None:
         """Adds a validation failure to the report.
 
         Args:
@@ -61,10 +61,10 @@ class ReportItem(NamedTuple):
     severity: str
     error_type: ErrorType
     header: str
-    directive: str = None
-    cookie: str = None
-    value: str = None
-    avoid: list = None
-    expected: list = None
-    anomalies: list = None
-    delimiter: str = None
+    directive: str | None = None
+    cookie: str | None = None
+    value: str | None = None
+    avoid: list[str] | None = None
+    expected: list[str] | None = None
+    anomalies: list[str] | None = None
+    delimiter: str | None = None

@@ -20,7 +20,7 @@ class URLParamType(ParamType):
 
     name = 'URL'
 
-    def convert(self, value, param, ctx):
+    def convert(self, value: str, param: click.Parameter | None, ctx: click.Context | None) -> str:
         if not value.startswith('http'):
             scheme = click.prompt('Please select a scheme', type=Choice(['http', 'https'], case_sensitive=False))
             value = f'{scheme}://{value}'
@@ -241,7 +241,7 @@ def bulk(file, cross_origin_isolated, debug, file_format, merge, output, rules_f
         sys.exit(os.EX_OK)
 
 
-def start():
+def start() -> None:
     try:
         main()
     except Exception as e:
