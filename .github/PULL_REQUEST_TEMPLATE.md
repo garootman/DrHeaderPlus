@@ -1,8 +1,8 @@
-# Thank you for contributing to DrHeader !
+# Thank you for contributing to DrHeaderPlus!
 
-To help keep changes flowing in and avoid potential merging headaches we have created this form. 
+To help keep changes flowing in and avoid potential merging headaches we have created this form.
 
-Please fill it in if you can or feel free to ask questions , we don't want this to be a barrier.
+Please fill it in if you can or feel free to ask questions, we don't want this to be a barrier.
 
 Please trim above here.
 
@@ -12,14 +12,14 @@ Please describe your changes here
 
 ## Type of change
 
-What types of changes do you want to introduce to DrHeader?
+What types of changes do you want to introduce to DrHeaderPlus?
 
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change 
+- [ ] Breaking change
 - [ ] Documentation Update
 - [ ] Test Update
-- [ ] Rules Update 
+- [ ] Rules Update
 - [ ] Other (please describe)
 
 Please ensure your pull request adheres to the following guidelines:
@@ -30,19 +30,19 @@ Please ensure your pull request adheres to the following guidelines:
 - [ ] You have the legal right to give us this code.
 - [ ] You have adhered to the CoC
 
-## Link to the github issue 
+## Link to the github issue
 
-https://github.com/Santandersecurityresearch/DrHeader/issues/
+https://github.com/garootman/DrHeaderPlus/issues/
 
-## Tests you have added 
+## Tests you have added
 
-testclass.method_name()  
+testclass.method_name()
 
 ## Tests you have altered
 
 testclass.method_name()
 
-## Anything Else 
+## Anything Else
 
 
-Thanks for getting this far !
+Thanks for getting this far!

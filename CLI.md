@@ -1,7 +1,5 @@
-![drHEADer](assets/img/hero.png)
-
 # CLI Usage
-This page describes how to use the drHEADer command line interface.
+This page describes how to use the DrHeaderPlus command line interface.
 
 ## Contents
 * [Analysing Headers Locally](#analysing-headers-locally)
@@ -16,12 +14,12 @@ This page describes how to use the drHEADer command line interface.
 * [Report Output](#report-output)
 
 ## Analysing Headers Locally
-You can validate a set of headers against a drHEADer ruleset using the `compare single` command:
+You can validate a set of headers against a DrHeaderPlus ruleset using the `compare single` command:
 ```shell
 $ drheader compare single [SCAN_OPTIONS] FILE
 ```
 
-This will parse the contents of `FILE`, analyse the headers within it against a drHEADer ruleset, and report back any
+This will parse the contents of `FILE`, analyse the headers within it against a DrHeaderPlus ruleset, and report back any
 rule violations. `FILE` is the path to a JSON file containing the headers to be analysed.
 
 ### Bulk Scanning
@@ -83,7 +81,7 @@ This will send an HTTP `HEAD` request to `TARGET_URL`, validate the headers that
 back any rule violations.
 
 ### Configuring the HTTP Request
-Internally, drHEADer uses the [`requests`](https://requests.readthedocs.io/en/latest/) package to make the HTTP call,
+Internally, DrHeaderPlus uses the [`requests`](https://requests.readthedocs.io/en/latest/) package to make the HTTP call,
 and you can customise the request with the same configuration options that can be processed by this package. Any
 arguments received in `[REQUEST_ARGS]` will be propagated to the HTTP call. This means, you can for instance...
 

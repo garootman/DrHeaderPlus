@@ -1,6 +1,6 @@
 # Introduction
 
-This document describes the format of the `rules.yml` file, which defines the policy drHEADer uses to audit your
+This document describes the format of the `rules.yml` file, which defines the policy DrHeaderPlus uses to audit your
 security headers. It also documents how to make changes to it so that you can configure your custom policy based on
 your specific requirements.
 
@@ -26,7 +26,7 @@ your specific requirements.
 
 ## Sample Policy
 
-drHEADer policy is defined in a yaml file. An example policy is given below:
+DrHeaderPlus policy is defined in a yaml file. An example policy is given below:
 
 ```yaml
 Cache-Control:
@@ -80,7 +80,7 @@ X-XSS-Protection:
 
 ## File Structure
 
-The yaml file structure for drHEADer is described below. All elements are case-insensitive, and all checks against
+The yaml file structure for DrHeaderPlus is described below. All elements are case-insensitive, and all checks against
 expected and disallowed values are case-insensitive.
 
 * There can be as many elements as headers you want to audit *(e.g. Content-Security-Policy, Set-Cookie)*
@@ -285,7 +285,7 @@ only `must-avoid`, `must-contain` and `must-contain-one` rules.
 #### Validating Named Cookies
 
 To validate a named cookie, you must specify the cookie to be validated as an element under the `cookies` element. You
-can then define validation rules per cookie. DrHEADer will search for a cookie matching the named one and apply the
+can then define validation rules per cookie. DrHeaderPlus will search for a cookie matching the named one and apply the
 validations only to that cookie.
 
 ```yaml

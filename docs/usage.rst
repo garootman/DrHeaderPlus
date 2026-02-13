@@ -2,7 +2,7 @@
 Usage
 =====
 
-To use drHEADer core in a project::
+To use DrHeaderPlus in a project::
 
     import drheader
     import yaml
@@ -17,7 +17,7 @@ To use drHEADer core in a project::
     report = drheader_instance.analyze(rules)
     print(report)
 
-To use the drHEADer cli::
+To use the DrHeaderPlus cli::
 
     $ drheader --help
 

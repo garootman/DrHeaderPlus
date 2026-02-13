@@ -1,5 +1,5 @@
-Welcome to drHEADer's documentation!
-======================================
+Welcome to DrHeaderPlus's documentation!
+========================================
 
 .. toctree::
    :maxdepth: 2
