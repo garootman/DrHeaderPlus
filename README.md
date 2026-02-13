@@ -12,6 +12,19 @@ When combined with the OWASP [Application Security Verification Standard](https:
 
 > DrHeaderPlus is a modernized fork of the original [drHEADer](https://github.com/Santandersecurityresearch/DrHeader) project by Santander UK Security Engineering.
 
+## Features
+
+- **Comprehensive header audit** against a configurable YAML ruleset aligned with OWASP and Mozilla Observatory
+- **CSP intelligence** — nonce/hash-aware validation that avoids false positives for modern CSP policies; `strict-dynamic` support
+- **CORS misconfiguration detection** — active origin reflection probe in scan mode
+- **Cookie security** — `SameSite=None` without `Secure` flag detection, attribute enforcement
+- **Leak header detection** — flags `Server`, `X-Powered-By`, `X-AspNet-Version`, and other information disclosure headers
+- **Cross-origin isolation** — opt-in COEP/COOP validation for sites that need `SharedArrayBuffer` / high-resolution timers
+- **Threshold checks** — `Value-Gte` validation for numeric directives (e.g. HSTS `max-age >= 6 months`)
+- **Per-rule severity** — high / medium / low aligned with OWASP guidance
+- **CLI and library** — use from the command line or integrate into your Python project
+- **Multiple output formats** — table, JSON, and JUnit XML for CI/CD integration
+
 ## Installation
 
 Requires Python 3.12+. Install from PyPI:

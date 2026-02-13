@@ -95,6 +95,7 @@ expected and disallowed values are case-insensitive.
     * `Value`: The item value must be an exact match with the expected value
     * `Value-One-Of`: The item value must be an exact match with exactly one of the expected values
     * `Value-Any-Of`: The item value must be an exact match with one or more of the expected values
+    * `Value-Gte`: The numeric item value must be greater than or equal to the specified threshold *(directives only)*
     * `Must-Avoid`: The item value must not contain any of the disallowed values
     * `Must-Contain`: The item value must contain all the expected values
     * `Must-Contain-One`: The item value must contain one or more of the expected values
@@ -244,6 +245,22 @@ Content-Security-Policy:
             Required: True
             Must-Contain: https://stylesheet-url.com
 ```
+
+#### Threshold Checks
+
+For directives with numeric values, you can use `Value-Gte` to enforce a minimum threshold. For example, to require
+HSTS `max-age` of at least 6 months (15552000 seconds):
+
+```yaml
+Strict-Transport-Security:
+    Required: True
+    Directives:
+        max-age:
+            Required: True
+            Value-Gte: 15552000
+```
+
+This avoids false positives for sites that set a longer `max-age` than the exact expected value.
 
 Note that if you want to enforce exists or not-exists validations for a directive, without enforcing any validations on
 its value, it is generally simpler to do so using contain and avoid validations respectively at the header level:
@@ -396,6 +413,19 @@ Cross-Origin-Opener-Policy:
 ** Note that cross-origin isolation validations are opt-in *(see
 [cross-origin isolation](README.md#cross-origin-isolation))*
 
+### Enforcing HSTS with a Minimum max-age
+
+```yaml
+Strict-Transport-Security:
+    Required: True
+    Must-Contain:
+        - includeSubDomains
+    Directives:
+        max-age:
+            Required: True
+            Value-Gte: 15552000
+```
+
 ### Enforcing a Fallback Referrer Policy
 
 ```yaml
@@ -406,3 +436,37 @@ Referrer-Policy:
         - strict-origin-when-cross-origin
     Preserve-Order: True
 ```
+
+## Built-in Smart Checks
+
+In addition to the rule-based validations described above, DrHeaderPlus performs several intelligent cross-header and
+context-aware checks automatically. These do not require any rule configuration.
+
+### CSP Nonce/Hash Awareness
+
+When a CSP directive (`script-src` or `style-src`) contains a nonce (`nonce-...`) or hash (`sha256-...`, `sha384-...`,
+`sha512-...`) source, the `unsafe-inline` keyword is automatically suppressed from must-avoid findings for that
+directive. This reflects the CSP spec where `unsafe-inline` is ignored by browsers when nonces or hashes are present.
+
+### CSP strict-dynamic Support
+
+When `strict-dynamic` is present alongside nonces or hashes in `script-src`, scheme sources (`http:`, `https:`) and
+`self` are ignored — matching browser behavior where `strict-dynamic` overrides these allowlist entries. This prevents
+false positives for modern CSP policies that rely on `strict-dynamic`.
+
+### Content-Security-Policy-Report-Only Detection
+
+If `Content-Security-Policy-Report-Only` is set without a corresponding enforcing `Content-Security-Policy` header,
+a high-severity finding is raised. Report-only mode alone provides no protection.
+
+### SameSite=None Requires Secure
+
+Cookies with `SameSite=None` that lack the `Secure` flag are flagged as high severity. Browsers reject `SameSite=None`
+cookies without `Secure`, so this is effectively a misconfiguration.
+
+### CORS Origin Reflection Probe
+
+In scan mode (when a URL is provided), DrHeaderPlus sends an additional request with a spoofed
+`Origin: https://evil.example.com` header. If the server reflects the origin in `Access-Control-Allow-Origin`, a
+finding is raised: medium severity for reflected origin, high severity if `Access-Control-Allow-Credentials: true` is
+also present. This check is skipped in compare mode (local headers).
