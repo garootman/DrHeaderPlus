@@ -8,7 +8,7 @@ from drheader.report import Finding
 
 
 def get_headers():
-    with open(os.path.join(os.path.dirname(__file__), '../test_resources/headers_ok.json')) as headers:
+    with open(os.path.join(os.path.dirname(__file__), "../test_resources/headers_ok.json")) as headers:
         return json.load(headers)
 
 
@@ -26,7 +26,7 @@ def delete_headers(*args):
 
 
 def process_test(headers=None, url=None, cross_origin_isolated=False):
-    with open(os.path.join(os.path.dirname(__file__), '../test_resources/default_rules.yml')) as rules:
+    with open(os.path.join(os.path.dirname(__file__), "../test_resources/default_rules.yml")) as rules:
         rules = yaml.safe_load(rules.read())
 
     drheader = core.Drheader(headers=headers, url=url)
@@ -42,18 +42,20 @@ def build_error_message(report: list[Finding], expected: Finding | None = None, 
             elif not rule:
                 unexpected_items.append(item)
 
-    error_message = '\n'
+    error_message = "\n"
     if len(unexpected_items) > 0:
-        error_message += '\nThe following items were found but were not expected in the report:\n'
+        error_message += "\nThe following items were found but were not expected in the report:\n"
         error_message += json.dumps([i.to_dict() for i in unexpected_items], indent=2)
     if expected and expected not in report:
-        error_message += '\n\nThe following was not found but was expected in the report:\n'
+        error_message += "\n\nThe following was not found but was expected in the report:\n"
         error_message += json.dumps(expected.to_dict(), indent=2)
     return error_message
 
 
 def reset_default_rules():
-    with open(os.path.join(os.path.dirname(__file__), '../../drheader/resources/rules.yml')) as rules, \
-         open(os.path.join(os.path.dirname(__file__), '../test_resources/default_rules.yml'), 'w') as default_rules:
+    with (
+        open(os.path.join(os.path.dirname(__file__), "../../drheader/resources/rules.yml")) as rules,
+        open(os.path.join(os.path.dirname(__file__), "../test_resources/default_rules.yml"), "w") as default_rules,
+    ):
         rules = yaml.safe_load(rules.read())
         yaml.dump(rules, default_rules, indent=2, sort_keys=False)

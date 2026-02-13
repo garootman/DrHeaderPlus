@@ -1,4 +1,5 @@
 """Utility functions for core module."""
+
 import io
 import os
 from typing import IO, Any, NamedTuple
@@ -15,13 +16,15 @@ class KeyValueDirective(NamedTuple):
 
 def default_rules() -> dict[str, Any]:
     """Returns the drHEADer default ruleset."""
-    with open(os.path.join(os.path.dirname(__file__), 'resources/rules.yml')) as rules:
+    with open(os.path.join(os.path.dirname(__file__), "resources/rules.yml")) as rules:
         rules = yaml.safe_load(rules.read())
         return rules
 
 
 def load_rules(
-    rules_file: IO[Any] | None = None, rules_uri: str | None = None, merge_default: bool = False,
+    rules_file: IO[Any] | None = None,
+    rules_uri: str | None = None,
+    merge_default: bool = False,
 ) -> dict[str, Any]:
     """Returns a drHEADer ruleset from a file.
 
@@ -47,7 +50,14 @@ def load_rules(
     return _merge_with_default_rules(rules) if merge_default else rules
 
 
-def parse_policy(policy: str, item_delimiter: str | None = None, key_value_delimiter: str | None = None, value_delimiter: str | None = None, strip_chars: str | None = None, keys_only: bool = False) -> list[str | KeyValueDirective]:  # noqa: E501
+def parse_policy(
+    policy: str,
+    item_delimiter: str | None = None,
+    key_value_delimiter: str | None = None,
+    value_delimiter: str | None = None,
+    strip_chars: str | None = None,
+    keys_only: bool = False,
+) -> list[str | KeyValueDirective]:  # noqa: E501
     """Parses a policy string into a list of individual directives.
 
     Args:
@@ -93,7 +103,9 @@ def _merge_with_default_rules(rules: dict[str, Any]) -> dict[str, Any]:
 
 
 def _extract_key_value_directive(
-    directive: list[str], value_delimiter: str | None, strip_chars: str | None,
+    directive: list[str],
+    value_delimiter: str | None,
+    strip_chars: str | None,
 ) -> KeyValueDirective:
     if value_delimiter:
         value_items = list(filter(lambda s: s.strip(), directive[1].split(value_delimiter)))

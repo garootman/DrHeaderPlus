@@ -1,4 +1,3 @@
-
-"""Top-level package for drHEADer core."""
+"""Top-level package for DrHeaderPlus."""
 
 from drheader.core import Drheader  # noqa
