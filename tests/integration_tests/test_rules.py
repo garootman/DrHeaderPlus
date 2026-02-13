@@ -115,17 +115,61 @@ class TestDefaultRules(unittest.TestCase):
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Cross-Origin-Opener-Policy'))
 
-    def test_pragma__should_exist(self):
-        headers = utils.delete_headers('Pragma')
+    def test_cross_origin_resource_policy__should_exist(self):
+        headers = utils.delete_headers('Cross-Origin-Resource-Policy')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Cross-Origin-Resource-Policy',
+            'message': 'Header not included in response',
+            'severity': 'medium',
+            'expected': ['same-origin']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Cross-Origin-Resource-Policy'))
+
+    def test_cross_origin_resource_policy__should_enforce_same_origin(self):
+        headers = utils.add_or_modify_header('Cross-Origin-Resource-Policy', 'cross-origin')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Cross-Origin-Resource-Policy',
+            'message': 'Value does not match security policy',
+            'severity': 'medium',
+            'value': 'cross-origin',
+            'expected': ['same-origin']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Cross-Origin-Resource-Policy'))
+
+    def test_permissions_policy__should_exist(self):
+        headers = utils.delete_headers('Permissions-Policy')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Permissions-Policy',
+            'message': 'Header not included in response',
+            'severity': 'medium'
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Permissions-Policy'))
+
+    def test_pragma__should_validate_when_present(self):
+        headers = utils.add_or_modify_header('Pragma', 'public')
 
         report = utils.process_test(headers=headers)
         expected = {
             'rule': 'Pragma',
-            'message': 'Header not included in response',
-            'severity': 'high',
+            'message': 'Value does not match security policy',
+            'severity': 'low',
+            'value': 'public',
             'expected': ['no-cache']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Pragma'))
+
+    def test_pragma__should_not_require_presence(self):
+        headers = utils.delete_headers('Pragma')
+
+        report = utils.process_test(headers=headers)
+        pragma_violations = [item for item in report if item['rule'] == 'Pragma']
+        self.assertEqual(len(pragma_violations), 0, msg=utils.build_error_message(report))
 
     def test_referrer_policy__should_exist(self):
         headers = utils.delete_headers('Referrer-Policy')
@@ -134,7 +178,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'Referrer-Policy',
             'message': 'Header not included in response',
-            'severity': 'high',
+            'severity': 'medium',
             'expected': ['strict-origin', 'strict-origin-when-cross-origin', 'no-referrer']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Referrer-Policy'))
@@ -146,7 +190,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'Referrer-Policy',
             'message': 'Value does not match security policy. Exactly one of the expected items was expected',
-            'severity': 'high',
+            'severity': 'medium',
             'value': 'same-origin',
             'expected': ['strict-origin', 'strict-origin-when-cross-origin', 'no-referrer']
         }
@@ -159,7 +203,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'Server',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'medium'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Server'))
 
@@ -172,7 +216,7 @@ class TestDefaultRules(unittest.TestCase):
             'message': 'Must-Contain directive missed',
             'severity': 'high',
             'value': '585733723; HttpOnly; SameSite=Strict',
-            'expected': ['HttpOnly', 'Secure'],
+            'expected': ['HttpOnly', 'Secure', 'SameSite'],
             'delimiter': ';',
             'anomalies': ['Secure']
         }
@@ -187,9 +231,24 @@ class TestDefaultRules(unittest.TestCase):
             'message': 'Must-Contain directive missed',
             'severity': 'high',
             'value': '585733723; Secure; SameSite=Strict',
-            'expected': ['HttpOnly', 'Secure'],
+            'expected': ['HttpOnly', 'Secure', 'SameSite'],
             'delimiter': ';',
             'anomalies': ['HttpOnly']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Set-Cookie'))
+
+    def test_set_cookie__should_enforce_samesite_for_all_cookies(self):
+        headers = utils.add_or_modify_header('Set-Cookie', ['session_id=585733723; HttpOnly; Secure'])
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'Set-Cookie - session_id',
+            'message': 'Must-Contain directive missed',
+            'severity': 'high',
+            'value': '585733723; HttpOnly; Secure',
+            'expected': ['HttpOnly', 'Secure', 'SameSite'],
+            'delimiter': ';',
+            'anomalies': ['SameSite']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'Set-Cookie'))
 
@@ -213,7 +272,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'User-Agent',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'low'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'User-Agent'))
 
@@ -224,7 +283,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-AspNet-Version',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'medium'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-AspNet-Version'))
 
@@ -235,7 +294,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Client-IP',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'medium'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Client-IP'))
 
@@ -246,7 +305,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Content-Type-Options',
             'message': 'Header not included in response',
-            'severity': 'high',
+            'severity': 'medium',
             'expected': ['nosniff']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Content-Type-Options'))
@@ -258,7 +317,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Frame-Options',
             'message': 'Header not included in response',
-            'severity': 'high',
+            'severity': 'medium',
             'expected': ['DENY', 'SAMEORIGIN']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Frame-Options'))
@@ -270,7 +329,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Frame-Options',
             'message': 'Value does not match security policy. Exactly one of the expected items was expected',
-            'severity': 'high',
+            'severity': 'medium',
             'value': 'ALLOW-FROM https//example.com',
             'expected': ['DENY', 'SAMEORIGIN']
         }
@@ -283,7 +342,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Forwarded-For',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'medium'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Forwarded-For'))
 
@@ -294,9 +353,34 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Generator',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'low'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Generator'))
+
+    def test_x_permitted_cross_domain_policies__should_exist(self):
+        headers = utils.delete_headers('X-Permitted-Cross-Domain-Policies')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'X-Permitted-Cross-Domain-Policies',
+            'message': 'Header not included in response',
+            'severity': 'low',
+            'expected': ['none']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Permitted-Cross-Domain-Policies'))
+
+    def test_x_permitted_cross_domain_policies__should_enforce_none(self):
+        headers = utils.add_or_modify_header('X-Permitted-Cross-Domain-Policies', 'all')
+
+        report = utils.process_test(headers=headers)
+        expected = {
+            'rule': 'X-Permitted-Cross-Domain-Policies',
+            'message': 'Value does not match security policy',
+            'severity': 'low',
+            'value': 'all',
+            'expected': ['none']
+        }
+        self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Permitted-Cross-Domain-Policies'))
 
     def test_x_powered_by__should_not_exist(self):
         headers = utils.add_or_modify_header('X-Powered-By', 'ASP.NET')
@@ -305,7 +389,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-Powered-By',
             'message': 'Header should not be returned',
-            'severity': 'high'
+            'severity': 'medium'
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-Powered-By'))
 
@@ -316,7 +400,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-XSS-Protection',
             'message': 'Header not included in response',
-            'severity': 'high',
+            'severity': 'low',
             'expected': ['0']
         }
         self.assertIn(expected, report, msg=utils.build_error_message(report, expected, 'X-XSS-Protection'))
@@ -328,7 +412,7 @@ class TestDefaultRules(unittest.TestCase):
         expected = {
             'rule': 'X-XSS-Protection',
             'message': 'Value does not match security policy',
-            'severity': 'high',
+            'severity': 'low',
             'value': '1; mode=block',
             'expected': ['0']
         }

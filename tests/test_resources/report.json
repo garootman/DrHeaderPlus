@@ -48,7 +48,7 @@
     {
         "rule": "Referrer-Policy",
         "message": "Value does not match security policy. Exactly one of the expected items was expected",
-        "severity": "high",
+        "severity": "medium",
         "value": "origin",
         "expected": [
             "strict-origin",
@@ -59,7 +59,7 @@
     {
         "rule": "Server",
         "message": "Header should not be returned",
-        "severity": "high"
+        "severity": "medium"
     },
     {
         "rule": "Set-Cookie - session_id",
@@ -68,11 +68,13 @@
         "value": "2943020342; Max-Age=2592000; Domain=.example.com; Secure",
         "expected": [
             "HttpOnly",
-            "Secure"
+            "Secure",
+            "SameSite"
         ],
         "delimiter": ";",
         "anomalies": [
-            "HttpOnly"
+            "HttpOnly",
+            "SameSite"
         ]
     },
     {
@@ -88,7 +90,7 @@
     {
         "rule": "X-XSS-Protection",
         "message": "Value does not match security policy",
-        "severity": "high",
+        "severity": "low",
         "value": "1; mode=block",
         "expected": [
             "0"

@@ -19,6 +19,10 @@
         "value_delimiter": " ",
         "strip_chars": "' "
     },
+    "Permissions-Policy": {
+        "item_delimiter": ",",
+        "key_value_delimiter": "="
+    },
     "Referrer-Policy": {
         "item_delimiter": ","
     },

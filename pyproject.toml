@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drheaderplus"
-version = "3.0.1rc1"
+version = "3.0.1rc2"
 description = "Audit your HTTP response headers for misconfigurations and enforce custom security rules!"
 readme = "README.md"
 license = "MIT"

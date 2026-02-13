@@ -1,10 +1,12 @@
 Cache-Control:
     Required: True
+    Severity: high
     Value:
         - no-store
         - max-age=0
 Content-Security-Policy:
     Required: True
+    Severity: high
     Must-Avoid:
         - unsafe-inline
         - unsafe-eval
@@ -16,51 +18,79 @@ Content-Security-Policy:
                 - self
 Cross-Origin-Embedder-Policy:
     Required: True
+    Severity: high
     Value: require-corp
 Cross-Origin-Opener-Policy:
     Required: True
+    Severity: high
     Value: same-origin
-Pragma:
+Cross-Origin-Resource-Policy:
     Required: True
+    Severity: medium
+    Value: same-origin
+Permissions-Policy:
+    Required: True
+    Severity: medium
+Pragma:
+    Required: Optional
+    Severity: low
     Value: no-cache
 Referrer-Policy:
     Required: True
+    Severity: medium
     Value-One-Of:
         - strict-origin
         - strict-origin-when-cross-origin
         - no-referrer
 Server:
     Required: False
+    Severity: medium
 Set-Cookie:
     Required: Optional
+    Severity: high
     Must-Contain:
         - HttpOnly
         - Secure
+        - SameSite
 Strict-Transport-Security:
     Required: True
+    Severity: high
     Value:
         - max-age=31536000
         - includeSubDomains
 User-Agent:
     Required: False
+    Severity: low
 X-AspNet-Version:
     Required: False
+    Severity: medium
 X-Client-IP:
     Required: False
+    Severity: medium
 X-Content-Type-Options:
     Required: True
+    Severity: medium
     Value: nosniff
 X-Forwarded-For:
     Required: False
+    Severity: medium
 X-Frame-Options:
     Required: True
+    Severity: medium
     Value-One-Of:
         - DENY
         - SAMEORIGIN
 X-Generator:
     Required: False
+    Severity: low
+X-Permitted-Cross-Domain-Policies:
+    Required: True
+    Severity: low
+    Value: none
 X-Powered-By:
     Required: False
+    Severity: medium
 X-XSS-Protection:
     Required: True
+    Severity: low
     Value: 0

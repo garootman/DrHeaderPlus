@@ -3,13 +3,16 @@
     "Content-Security-Policy": "default-src 'none'; script-src 'self'; object-src 'self'; frame-src 'self'",
     "Cross-Origin-Embedder-Policy": "require-corp",
     "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
+    "X-Permitted-Cross-Domain-Policies": "none",
     "Referrer-Policy": "no-referrer",
     "Cache-Control": "no-store, max-age=0",
     "Pragma": "no-cache",
     "Set-Cookie": [
-        "session_id=4589399433; HttpOnly; Secure"
+        "session_id=4589399433; HttpOnly; Secure; SameSite=Lax"
     ]
 }
