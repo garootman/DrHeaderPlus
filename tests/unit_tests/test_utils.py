@@ -91,3 +91,40 @@ class TestUtils(unittest.TestCase):
 
         with self.assertRaises(Exception):
             utils.get_rules_from_uri(uri)
+
+
+class TestPresetRules(unittest.TestCase):
+    def test_presets_constant__should_contain_asvs_v14(self):
+        self.assertIn("owasp-asvs-v14", utils.PRESETS)
+
+    def test_preset_rules__should_load_asvs_v14_preset(self):
+        rules = utils.preset_rules("owasp-asvs-v14")
+
+        expected_headers = [
+            "Content-Security-Policy",
+            "X-Content-Type-Options",
+            "Strict-Transport-Security",
+            "Referrer-Policy",
+            "X-Frame-Options",
+            "Access-Control-Allow-Origin",
+        ]
+        for header in expected_headers:
+            self.assertIn(header, rules, msg=f"{header} missing from ASVS preset")
+
+    def test_preset_rules__should_not_contain_default_only_headers(self):
+        rules = utils.preset_rules("owasp-asvs-v14")
+
+        default_only_headers = [
+            "Cache-Control",
+            "Server",
+            "Permissions-Policy",
+            "X-Permitted-Cross-Domain-Policies",
+            "X-XSS-Protection",
+            "Pragma",
+        ]
+        for header in default_only_headers:
+            self.assertNotIn(header, rules, msg=f"{header} should not be in ASVS preset")
+
+    def test_preset_rules__unknown_preset_should_raise_value_error(self):
+        with self.assertRaises(ValueError):
+            utils.preset_rules("nonexistent-preset")

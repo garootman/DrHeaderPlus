@@ -8,7 +8,7 @@ There are a number of HTTP headers which enhance the security of a website when 
 
 DrHeaderPlus helps with the audit of security headers received in response to a single request or a list of requests.
 
-When combined with the OWASP [Application Security Verification Standard](https://github.com/OWASP/ASVS/blob/master/4.0/en/0x22-V14-Config.md) (ASVS) 4.0, it is a useful tool to include as part of an automated CI/CD pipeline which checks for missing HTTP headers.
+DrHeaderPlus ships a built-in [OWASP ASVS 4.0 V14](https://github.com/OWASP/ASVS/blob/master/4.0/en/0x22-V14-Config.md) preset (`--preset owasp-asvs-v14`) for compliance scanning, and is a useful tool to include as part of an automated CI/CD pipeline which checks for missing HTTP headers.
 
 > DrHeaderPlus is a modernized fork of the original [drHEADer](https://github.com/Santandersecurityresearch/DrHeader) project by Santander UK Security Engineering.
 
@@ -20,6 +20,7 @@ When combined with the OWASP [Application Security Verification Standard](https:
 - **Cookie security** — `SameSite=None` without `Secure` flag detection, attribute enforcement
 - **Leak header detection** — flags `Server`, `X-Powered-By`, `X-AspNet-Version`, and other information disclosure headers
 - **Cross-origin isolation** — opt-in COEP/COOP validation for sites that need `SharedArrayBuffer` / high-resolution timers
+- **OWASP ASVS 4.0 V14 preset** — built-in `--preset owasp-asvs-v14` for compliance scanning against ASVS configuration requirements
 - **Threshold checks** — `Value-Gte` validation for numeric directives (e.g. HSTS `max-age >= 6 months`)
 - **Per-rule severity** — high / medium / low aligned with OWASP guidance
 - **CLI and library** — use from the command line or integrate into your Python project

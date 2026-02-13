@@ -183,6 +183,46 @@ class TestCli(TestCase):
         assert json.loads(response.output)[1]["error"] == "Error retrieving headers"
 
 
+class TestPresetCli(TestCase):
+    @mock.patch("drheader.cli.cli.Drheader")
+    def test_compare_single__should_use_preset_rules(self, drheader_mock):
+        drheader_mock.return_value.analyze.return_value = []
+
+        file = os.path.join(_RESOURCES_DIR, "headers_ok.json")
+        response = CliRunner().invoke(cli.main, ["compare", "single", "--preset", "owasp-asvs-v14", file])
+
+        assert response.exit_code == 0
+
+    def test_compare_single__preset_with_rules_file_should_error(self):
+        file = os.path.join(_RESOURCES_DIR, "headers_ok.json")
+        rules_file = os.path.join(_RESOURCES_DIR, "default_rules.yml")
+        response = CliRunner().invoke(
+            cli.main, ["compare", "single", "--preset", "owasp-asvs-v14", "--rules-file", rules_file, file]
+        )
+
+        assert response.exit_code != 0
+        assert "--preset cannot be used with --rules-file or --rules-uri" in response.output
+
+    def test_compare_single__invalid_preset_should_error(self):
+        file = os.path.join(_RESOURCES_DIR, "headers_ok.json")
+        response = CliRunner().invoke(cli.main, ["compare", "single", "--preset", "nonexistent", file])
+
+        assert response.exit_code != 0
+
+    @mock.patch("drheader.cli.cli.Drheader")
+    def test_scan_single__should_use_preset_rules(self, drheader_mock):
+        drheader_mock.return_value.analyze.return_value = []
+        response = CliRunner().invoke(cli.main, ["scan", "single", "--preset", "owasp-asvs-v14", "https://example.com"])
+
+        assert response.exit_code == 0
+
+    def test_get_rules__should_return_preset_rules_when_preset_provided(self):
+        rules = utils.get_rules(preset="owasp-asvs-v14")
+
+        assert "Content-Security-Policy" in rules
+        assert "Cache-Control" not in rules
+
+
 class TestUtils(TestCase, XmlTestMixin):
     def setUp(self):
         with open(os.path.join(_RESOURCES_DIR, "report.json")) as report:

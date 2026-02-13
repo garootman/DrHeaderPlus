@@ -470,3 +470,50 @@ In scan mode (when a URL is provided), DrHeaderPlus sends an additional request 
 `Origin: https://evil.example.com` header. If the server reflects the origin in `Access-Control-Allow-Origin`, a
 finding is raised: medium severity for reflected origin, high severity if `Access-Control-Allow-Credentials: true` is
 also present. This check is skipped in compare mode (local headers).
+
+## Presets
+
+DrHeaderPlus ships built-in preset rulesets for common compliance standards. Presets are self-contained YAML files that
+replace (not merge with) the default rules.
+
+### Usage
+
+CLI:
+```shell
+$ drheader scan single --preset owasp-asvs-v14 https://example.com
+$ drheader compare single --preset owasp-asvs-v14 headers.json
+```
+
+Python:
+```python
+from drheader import Drheader
+from drheader.utils import preset_rules
+
+rules = preset_rules("owasp-asvs-v14")
+report = Drheader(url="https://example.com").analyze(rules=rules)
+```
+
+The `--preset` flag cannot be combined with `--rules-file` or `--rules-uri`.
+
+### owasp-asvs-v14
+
+Covers the response-header requirements from [OWASP ASVS 4.0 V14](https://github.com/OWASP/ASVS/blob/master/4.0/en/0x22-V14-Config.md) (Configuration).
+
+#### Included requirements
+
+| ASVS ID  | Header                       | Validation                                                                |
+|:---------|:-----------------------------|:--------------------------------------------------------------------------|
+| V14.4.3  | Content-Security-Policy      | Required; must-avoid unsafe-inline, unsafe-eval; default-src none/self    |
+| V14.4.4  | X-Content-Type-Options       | Required; value: nosniff                                                  |
+| V14.4.5  | Strict-Transport-Security    | Required; includeSubDomains; max-age >= 15724800                          |
+| V14.4.6  | Referrer-Policy              | Required; one-of: strict-origin, strict-origin-when-cross-origin, no-referrer |
+| V14.4.7  | X-Frame-Options              | Required; DENY or SAMEORIGIN                                             |
+| V14.5.3  | Access-Control-Allow-Origin  | Optional; must-avoid * and null                                           |
+
+#### Excluded requirements
+
+| ASVS ID          | Reason                                                                        |
+|:-----------------|:------------------------------------------------------------------------------|
+| V14.4.1          | Content-Type charset is context-specific (JSON is always UTF-8 per RFC 8259)  |
+| V14.4.2          | Content-Disposition: attachment is API-specific; false positives on HTML pages |
+| V14.5.1 / V14.5.2 / V14.5.4 | Server-side request validation; not observable in response headers |

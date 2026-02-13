@@ -14,7 +14,10 @@ def get_rules(
     rules_file: IO[Any] | None = None,
     rules_uri: str | None = None,
     merge_default: bool = False,
+    preset: str | None = None,
 ) -> dict[str, Any]:
+    if preset:
+        return utils.preset_rules(preset)
     if rules_file or rules_uri:
         return utils.load_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge_default)
     else:

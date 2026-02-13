@@ -63,12 +63,15 @@ This table lists the scan options available when using the `compare` command:
 | `--junit`                  | `-j`             | Generate a JUnit report *(not available for bulk scanning)* |
 | `--merge`                  | `-m`             | Merge a custom ruleset with the default rules               |
 | `--output [json \| table]` | `-o`             | Report output format  [default: table]                      |
+| `--preset [NAME]`          | `-p`             | Use a built-in preset ruleset ³                             |
 | `--rules-file FILENAME`    | `-rf`            | Use a custom ruleset, loaded from file ²                    |
 | `--rules-uri URI`          | `-ru`            | Use a custom ruleset, downloaded from URI ²                 |
 
 ¹ Cross-origin isolation validations are opt-in. See [Cross-Origin Isolation](README.md#cross-origin-isolation).
 
 ² For information on defining a custom ruleset see [RULES](RULES.md).
+
+³ Cannot be used with `--rules-file` or `--rules-uri`. Available presets: `owasp-asvs-v14`. See [Presets](RULES.md#presets).
 
 ## Scanning Remote Endpoints
 You can scan a remote endpoint using the `scan single` command:
@@ -198,12 +201,15 @@ This table lists the scan options available when using the `scan` command:
 | `--junit`                     | `-j`             | Generate a JUnit report *(not available for bulk scanning)* |
 | `--merge`                     | `-m`             | Merge a custom ruleset with the default rules               |
 | `--output [json \| table]`    | `-o`             | Report output format  [default: table]                      |
+| `--preset [NAME]`             | `-p`             | Use a built-in preset ruleset ³                             |
 | `--rules-file FILENAME`       | `-rf`            | Use a custom ruleset, loaded from file ²                    |
 | `--rules-uri URI`             | `-ru`            | Use a custom ruleset, downloaded from URI ²                 |
 
 ¹ Cross-origin isolation validations are opt-in. See [Cross-Origin Isolation](README.md#cross-origin-isolation).
 
 ² For information on defining a custom ruleset see [RULES](RULES.md).
+
+³ Cannot be used with `--rules-file` or `--rules-uri`. Available presets: `owasp-asvs-v14`. See [Presets](RULES.md#presets).
 
 ## Report Output
 By default, results will be output in a tabulated format:

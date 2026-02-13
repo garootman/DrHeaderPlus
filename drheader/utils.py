@@ -14,11 +14,34 @@ class KeyValueDirective(NamedTuple):
     raw_value: str | None = None
 
 
+PRESETS: dict[str, str] = {
+    "owasp-asvs-v14": "resources/rules_asvs_v14.yml",
+}
+
+
 def default_rules() -> dict[str, Any]:
     """Returns the drHEADer default ruleset."""
     with open(os.path.join(os.path.dirname(__file__), "resources/rules.yml")) as rules:
         rules = yaml.safe_load(rules.read())
         return rules
+
+
+def preset_rules(preset: str) -> dict[str, Any]:
+    """Returns a drHEADer ruleset for a named preset.
+
+    Args:
+        preset (str): The preset name (e.g. 'owasp-asvs-v14').
+
+    Returns:
+        A dict containing the preset rules.
+
+    Raises:
+        ValueError: If the preset name is not recognised.
+    """
+    if preset not in PRESETS:
+        raise ValueError(f"Unknown preset '{preset}'. Available presets: {', '.join(sorted(PRESETS))}")
+    with open(os.path.join(os.path.dirname(__file__), PRESETS[preset])) as rules:
+        return yaml.safe_load(rules.read())
 
 
 def load_rules(

@@ -13,8 +13,10 @@ from click import Choice, File, ParamType
 
 from drheader import Drheader
 from drheader.cli import utils
+from drheader.utils import PRESETS
 
 _OUTPUT_TYPES = ["json", "table"]
+_PRESET_NAMES = sorted(PRESETS.keys())
 
 
 class URLParamType(ParamType):
@@ -50,14 +52,17 @@ def scan():
 @click.option("--junit", "-j", is_flag=True, help="Generate a JUnit report")
 @click.option("--merge", "-m", is_flag=True, help="Merge a custom ruleset with the default rules")
 @click.option("--output", "-o", type=Choice(_OUTPUT_TYPES, case_sensitive=False), help="Report output format")
+@click.option("--preset", "-p", type=Choice(_PRESET_NAMES, case_sensitive=False), help="Use a built-in preset ruleset")
 @click.option("--rules-file", "-rf", type=File(), help="Use a custom ruleset, loaded from file")
 @click.option("--rules-uri", "-ru", metavar="URI", help="Use a custom ruleset, downloaded from URI")
-def single(file, cross_origin_isolated, debug, junit, merge, output, rules_file, rules_uri):
+def single(file, cross_origin_isolated, debug, junit, merge, output, preset, rules_file, rules_uri):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    if preset and (rules_file or rules_uri):
+        raise click.UsageError("--preset cannot be used with --rules-file or --rules-uri")
 
     scanner = Drheader(headers=json.loads(file.read()))
-    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge)
+    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge, preset=preset)
     report = scanner.analyze(rules=rules, cross_origin_isolated=cross_origin_isolated)
 
     if output == "json":
@@ -81,11 +86,14 @@ def single(file, cross_origin_isolated, debug, junit, merge, output, rules_file,
 @click.option("--debug", "-d", is_flag=True, help="Enable debug logging")
 @click.option("--merge", "-m", is_flag=True, help="Merge a custom ruleset with the default rules")
 @click.option("--output", "-o", type=Choice(_OUTPUT_TYPES, case_sensitive=False), help="Report output format")
+@click.option("--preset", "-p", type=Choice(_PRESET_NAMES, case_sensitive=False), help="Use a built-in preset ruleset")
 @click.option("--rules-file", "-rf", type=File(), help="Use a custom ruleset, loaded from file")
 @click.option("--rules-uri", "-ru", metavar="URI", help="Use a custom ruleset, downloaded from URI")
-def bulk(file, cross_origin_isolated, debug, merge, output, rules_file, rules_uri):
+def bulk(file, cross_origin_isolated, debug, merge, output, preset, rules_file, rules_uri):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    if preset and (rules_file or rules_uri):
+        raise click.UsageError("--preset cannot be used with --rules-file or --rules-uri")
 
     data = json.loads(file.read())
     with open(os.path.join(os.path.dirname(__file__), "../resources/cli/bulk_compare_schema.json")) as schema:
@@ -93,7 +101,7 @@ def bulk(file, cross_origin_isolated, debug, merge, output, rules_file, rules_ur
         jsonschema.validate(instance=data, schema=schema)
 
     audit = []
-    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge)
+    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge, preset=preset)
     for target in data:
         try:
             scanner = Drheader(headers=target["headers"])
@@ -131,11 +139,14 @@ def bulk(file, cross_origin_isolated, debug, merge, output, rules_file, rules_ur
 @click.option("--junit", "-j", is_flag=True, help="Generate a JUnit report")
 @click.option("--merge", "-m", is_flag=True, help="Merge a custom ruleset with the default rules")
 @click.option("--output", "-o", type=Choice(_OUTPUT_TYPES, case_sensitive=False), help="Report output format")
+@click.option("--preset", "-p", type=Choice(_PRESET_NAMES, case_sensitive=False), help="Use a built-in preset ruleset")
 @click.option("--rules-file", "-rf", type=File(), help="Use a custom ruleset, loaded from file")
 @click.option("--rules-uri", "-ru", metavar="URI", help="Use a custom ruleset, downloaded from URI")
-def single(target_url, request_args, cross_origin_isolated, debug, junit, merge, output, rules_file, rules_uri):  # noqa: E501, F811
+def single(target_url, request_args, cross_origin_isolated, debug, junit, merge, output, preset, rules_file, rules_uri):  # noqa: E501, F811
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    if preset and (rules_file or rules_uri):
+        raise click.UsageError("--preset cannot be used with --rules-file or --rules-uri")
 
     kwargs = {}
     for i in range(0, len(request_args), 2):
@@ -149,7 +160,7 @@ def single(target_url, request_args, cross_origin_isolated, debug, junit, merge,
                 kwargs[key] = request_args[i + 1]
 
     scanner = Drheader(url=target_url, **kwargs)
-    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge)
+    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge, preset=preset)
     report = scanner.analyze(rules=rules, cross_origin_isolated=cross_origin_isolated)
 
     if output == "json":
@@ -174,11 +185,14 @@ def single(target_url, request_args, cross_origin_isolated, debug, junit, merge,
 @click.option("--file-format", "-ff", type=Choice(["json", "txt"], case_sensitive=False), help="FILE input format")
 @click.option("--merge", "-m", is_flag=True, help="Merge a custom ruleset with the default rules")
 @click.option("--output", "-o", type=Choice(_OUTPUT_TYPES, case_sensitive=False), help="Report output format")
+@click.option("--preset", "-p", type=Choice(_PRESET_NAMES, case_sensitive=False), help="Use a built-in preset ruleset")
 @click.option("--rules-file", "-rf", type=File(), help="Use a custom ruleset, loaded from file")
 @click.option("--rules-uri", "-ru", metavar="URI", help="Use a custom ruleset, downloaded from URI")
-def bulk(file, cross_origin_isolated, debug, file_format, merge, output, rules_file, rules_uri):  # noqa: F811
+def bulk(file, cross_origin_isolated, debug, file_format, merge, output, preset, rules_file, rules_uri):  # noqa: F811
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    if preset and (rules_file or rules_uri):
+        raise click.UsageError("--preset cannot be used with --rules-file or --rules-uri")
 
     if file_format == "txt":
         urls = [{"url": url} for url in list(filter(None, file.read().splitlines()))]
@@ -189,7 +203,7 @@ def bulk(file, cross_origin_isolated, debug, file_format, merge, output, rules_f
             jsonschema.validate(instance=urls, schema=schema)
 
     audit = []
-    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge)
+    rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge, preset=preset)
     for target in urls:
         for key, value in target.items():
             try:
