@@ -1,9 +1,9 @@
 import json
 import os
+from typing import Any
 
-import yaml
-
-from drheader import core
+from drheader import utils as drheader_utils
+from drheader.core import Drheader
 from drheader.report import Finding
 
 
@@ -25,11 +25,16 @@ def delete_headers(*args):
     return headers
 
 
-def process_test(headers=None, url=None, cross_origin_isolated=False):
-    with open(os.path.join(os.path.dirname(__file__), "../test_resources/default_rules.yml")) as rules:
-        rules = yaml.safe_load(rules.read())
+def process_test(
+    headers=None,
+    url=None,
+    rules: dict[str, Any] | None = None,
+    cross_origin_isolated=False,
+):
+    if rules is None:
+        rules = drheader_utils.default_rules()
 
-    drheader = core.Drheader(headers=headers, url=url)
+    drheader = Drheader(headers=headers, url=url)
     return drheader.analyze(rules=rules, cross_origin_isolated=cross_origin_isolated)
 
 
@@ -50,12 +55,3 @@ def build_error_message(report: list[Finding], expected: Finding | None = None, 
         error_message += "\n\nThe following was not found but was expected in the report:\n"
         error_message += json.dumps(expected.to_dict(), indent=2)
     return error_message
-
-
-def reset_default_rules():
-    with (
-        open(os.path.join(os.path.dirname(__file__), "../../drheader/resources/rules.yml")) as rules,
-        open(os.path.join(os.path.dirname(__file__), "../test_resources/default_rules.yml"), "w") as default_rules,
-    ):
-        rules = yaml.safe_load(rules.read())
-        yaml.dump(rules, default_rules, indent=2, sort_keys=False)

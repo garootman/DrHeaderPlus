@@ -204,10 +204,10 @@ class HeaderValidator(base.ValidatorBase):
 
         directives = utils.parse_policy(header_value, **config["delimiters"])
         for directive in directives:
-            try:
+            if isinstance(directive, utils.KeyValueDirective):
                 header_items.append(directive.key)
-                header_items += [value for value in directive.value]
-            except AttributeError:
+                header_items.extend(directive.value)
+            else:
                 header_items.append(directive)
         header_items = {str(item).lower() for item in header_items}
 
@@ -217,27 +217,26 @@ class HeaderValidator(base.ValidatorBase):
                 non_compliant_directives = []
                 suppressed = False
                 for directive in directives:
-                    try:
-                        if avoid in directive.value:
-                            # CSP: unsafe-inline is neutralized by nonces/hashes in script-src/style-src
-                            if (
-                                avoid.lower() == "unsafe-inline"
-                                and directive.key.lower() in base._CSP_NONCE_HASH_DIRECTIVES
-                                and base.has_nonce_or_hash(directive.value)
-                            ):
-                                suppressed = True
-                                continue
-                            # CSP: strict-dynamic with nonces ignores scheme sources and 'self' in script-src
-                            if (
-                                avoid.lower() in base._CSP_STRICT_DYNAMIC_IGNORED
-                                and directive.key.lower() == "script-src"
-                                and base.has_strict_dynamic_with_nonce(directive.value)
-                            ):
-                                suppressed = True
-                                continue
-                            non_compliant_directives.append(directive)
-                    except AttributeError:
-                        pass
+                    if not isinstance(directive, utils.KeyValueDirective):
+                        continue
+                    if avoid in directive.value:
+                        # CSP: unsafe-inline is neutralized by nonces/hashes in script-src/style-src
+                        if (
+                            avoid.lower() == "unsafe-inline"
+                            and directive.key.lower() in base._CSP_NONCE_HASH_DIRECTIVES
+                            and base.has_nonce_or_hash(directive.value)
+                        ):
+                            suppressed = True
+                            continue
+                        # CSP: strict-dynamic with nonces ignores scheme sources and 'self' in script-src
+                        if (
+                            avoid.lower() in base._CSP_STRICT_DYNAMIC_IGNORED
+                            and directive.key.lower() == "script-src"
+                            and base.has_strict_dynamic_with_nonce(directive.value)
+                        ):
+                            suppressed = True
+                            continue
+                        non_compliant_directives.append(directive)
 
                 if not non_compliant_directives and not suppressed:
                     anomalies.append(avoid)

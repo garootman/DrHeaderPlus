@@ -5,9 +5,6 @@ from tests.integration_tests import utils
 
 
 class TestDefaultRules(unittest.TestCase):
-    def tearDown(self):
-        utils.reset_default_rules()
-
     def test__should_validate_all_rules_for_valid_headers(self):
         headers = utils.get_headers()
 

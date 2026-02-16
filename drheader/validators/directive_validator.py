@@ -253,7 +253,8 @@ class DirectiveValidator(base.ValidatorBase):
 def _get_key_value_directive(
     directive_name: str,
     directives_list: list[str | KeyValueDirective],
-) -> KeyValueDirective | None:
+) -> KeyValueDirective:
     for directive in directives_list:
         if isinstance(directive, utils.KeyValueDirective) and directive.key.lower() == directive_name.lower():
             return directive
+    raise ValueError(f"Directive '{directive_name}' not found as key-value directive in parsed policy")

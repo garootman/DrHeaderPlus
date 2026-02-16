@@ -83,6 +83,10 @@ def parse_policy(
 ) -> list[str | KeyValueDirective]:  # noqa: E501
     """Parses a policy string into a list of individual directives.
 
+    When a key_value_delimiter is provided, each key-value directive produces TWO entries in the
+    returned list: the raw string (e.g. "default-src 'none'") AND a parsed KeyValueDirective.
+    Callers must use isinstance() to distinguish between the two types.
+
     Args:
         policy (str): The policy to be parsed.
         item_delimiter (str): (optional) The character that delimits individual directives.
@@ -92,7 +96,8 @@ def parse_policy(
         keys_only (bool): (optional) A flag to return only keys from key-value directives. Default is False.
 
     Returns:
-        A list of directives.
+        A list of directives. When key_value_delimiter is set, contains both raw strings and
+        KeyValueDirective objects for each key-value pair.
     """
     if not item_delimiter:
         return [policy.strip(strip_chars)]

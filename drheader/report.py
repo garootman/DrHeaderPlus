@@ -1,8 +1,14 @@
 """Primary module for report generation and storage."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
+
+
+class Severity(StrEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 class ErrorType(Enum):
@@ -24,7 +30,7 @@ class ErrorType(Enum):
 
 @dataclass
 class ReportItem:
-    severity: str
+    severity: Severity
     error_type: ErrorType
     header: str
     directive: str | None = None
@@ -40,7 +46,7 @@ class ReportItem:
 class Finding:
     rule: str
     message: str
-    severity: str
+    severity: Severity
     value: str | None = None
     expected: list[str] | None = None
     avoid: list[str] | None = None

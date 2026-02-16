@@ -1,6 +1,5 @@
 """Console script for drheader."""
 
-import ast
 import json
 import logging
 import os
@@ -124,11 +123,8 @@ def bulk(file, cross_origin_isolated, debug, merge, output, preset, rules_file, 
                 click.echo(f"{target['url']}: {len(target['report'])} issues found")
                 click.echo(utils.tabulate_report(target["report"]))
 
-    for target in audit:
-        if target.get("report") or target.get("error"):
-            sys.exit(os.EX_SOFTWARE)
-    else:
-        sys.exit(os.EX_OK)
+    has_issues = any(target.get("report") or target.get("error") for target in audit)
+    sys.exit(os.EX_SOFTWARE if has_issues else os.EX_OK)
 
 
 @scan.command(context_settings={"default_map": {"output": "table"}, "ignore_unknown_options": True})
@@ -154,10 +150,7 @@ def single(target_url, request_args, cross_origin_isolated, debug, junit, merge,
         try:
             kwargs[key] = json.loads(request_args[i + 1])
         except JSONDecodeError:
-            try:
-                kwargs[key] = ast.literal_eval(request_args[i + 1])  # This handles bytes and tuples
-            except (SyntaxError, ValueError):
-                kwargs[key] = request_args[i + 1]
+            kwargs[key] = request_args[i + 1]
 
     scanner = Drheader(url=target_url, **kwargs)
     rules = utils.get_rules(rules_file=rules_file, rules_uri=rules_uri, merge_default=merge, preset=preset)
@@ -207,9 +200,9 @@ def bulk(file, cross_origin_isolated, debug, file_format, merge, output, preset,
     for target in urls:
         for key, value in target.items():
             try:
-                target[key] = ast.literal_eval(value)  # This handles bytes and tuples
-            except (SyntaxError, ValueError):
-                target[key] = value
+                target[key] = json.loads(value)
+            except (JSONDecodeError, TypeError):
+                pass
 
         try:
             scanner = Drheader(**target)
@@ -232,11 +225,8 @@ def bulk(file, cross_origin_isolated, debug, file_format, merge, output, preset,
                 click.echo(f"{target['url']}: {len(target['report'])} issues found")
                 click.echo(utils.tabulate_report(target["report"]))
 
-    for target in audit:
-        if target.get("report") or target.get("error"):
-            sys.exit(os.EX_SOFTWARE)
-    else:
-        sys.exit(os.EX_OK)
+    has_issues = any(target.get("report") or target.get("error") for target in audit)
+    sys.exit(os.EX_SOFTWARE if has_issues else os.EX_OK)
 
 
 def start() -> None:

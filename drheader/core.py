@@ -1,5 +1,6 @@
 """Main module and entry point for analysis."""
 
+import functools
 import json
 import logging
 import os
@@ -18,8 +19,11 @@ from drheader.validators.header_validator import HeaderValidator
 _ALLOWED_HTTP_METHODS = ["delete", "get", "head", "options", "patch", "post", "put"]
 _CROSS_ORIGIN_HEADERS = ["cross-origin-embedder-policy", "cross-origin-opener-policy"]
 
-with open(os.path.join(os.path.dirname(__file__), "resources/delimiters.json")) as delimiters:
-    _DELIMITERS = CaseInsensitiveDict(json.load(delimiters))
+
+@functools.cache
+def _load_delimiters() -> CaseInsensitiveDict[str, Any]:
+    with open(os.path.join(os.path.dirname(__file__), "resources/delimiters.json")) as f:
+        return CaseInsensitiveDict(json.load(f))
 
 
 class Drheader:
@@ -178,7 +182,7 @@ class Drheader:
         **kwargs: Any,
     ) -> None:
         """Validates rules for a single header, directive or cookie."""
-        config["delimiters"] = _DELIMITERS.get(header, {})
+        config["delimiters"] = _load_delimiters().get(header, {})
         required = str(config["required"]).strip().lower()
 
         if required == "true":
@@ -194,7 +198,7 @@ class Drheader:
                 is_present = cookie in self.cookies
             elif directive := kwargs.get("directive"):
                 is_present = directive in utils.parse_policy(
-                    self.headers[header], **_DELIMITERS[header], keys_only=True
+                    self.headers[header], **_load_delimiters()[header], keys_only=True
                 )  # noqa: E501
             else:
                 is_present = header in self.headers
@@ -235,11 +239,11 @@ class Drheader:
 
     def _add_to_report(self, report_item: ReportItem | list[ReportItem]) -> None:
         """Adds a finding or list of findings to the final report."""
-        try:
-            self.reporter.add_item(report_item)
-        except AttributeError:  # For must-avoid rules on policy headers (CSP, Permissions-Policy)
-            for item in report_item:  # A separate report item is created for each directive that violates the must-avoid rule e.g. multiple directives containing 'unsafe-inline'  # noqa:E501
+        if isinstance(report_item, list):
+            for item in report_item:
                 self.reporter.add_item(item)
+        else:
+            self.reporter.add_item(report_item)
 
 
 def _get_headers_from_url(url: str, method: str = "head", **kwargs: Any) -> CaseInsensitiveDict[str, Any]:
