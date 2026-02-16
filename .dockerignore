@@ -63,8 +63,8 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
+# Documentation (markdown files at repo root)
+docs/
 
 # PyBuilder
 target/

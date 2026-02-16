@@ -19,9 +19,7 @@
     "SECURITY.md",
     "HISTORY.md",
     "Dockerfile",
-    "Makefile",
-    "drheader.rst",
-    "modules.rst"
+    "Makefile"
   ],
   "rules": [
     "Header names are case-insensitive (uses CaseInsensitiveDict internally)",
