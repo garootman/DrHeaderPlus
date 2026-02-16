@@ -1,0 +1,154 @@
+# DrHeaderPlus
+
+> Python CLI and library for auditing HTTP security headers against configurable YAML rulesets.
+
+## Install
+
+```
+pip install drheaderplus
+```
+
+Requires Python 3.12+.
+
+## Quick Start
+
+### CLI
+
+```bash
+drheader scan single https://example.com
+drheader scan single https://example.com --output json
+drheader scan single https://example.com --preset owasp-asvs-v14
+drheader scan single https://example.com --junit
+```
+
+Exit code is 0 when no issues found, non-zero (70) when findings exist.
+
+### Python
+
+```python
+from drheader import Drheader
+
+scanner = Drheader(url="https://example.com")
+findings = scanner.analyze()
+
+for f in findings:
+    print(f"[{f.severity.upper()}] {f.rule}: {f.message}")
+```
+
+## Core API
+
+### Drheader(url=None, headers=None, **kwargs)
+
+- `url`: Remote endpoint to scan (sends HEAD request by default).
+- `headers`: Dict of headers to analyze (when no URL), or request headers to send (when URL is given).
+- `method`: HTTP method — "head" (default), "get", "post", etc.
+- All other kwargs forwarded to `requests.request()` — `timeout`, `verify`, `cookies`, `params`, etc.
+
+At least one of `url` or `headers` is required.
+
+### .analyze(rules=None, cross_origin_isolated=False) -> list[Finding]
+
+Runs all rules and returns findings. Empty list means all headers passed.
+
+- `rules`: Custom rules dict. Uses built-in defaults if omitted.
+- `cross_origin_isolated`: Enable COEP/COOP checks (opt-in, default False).
+
+### Finding (dataclass)
+
+| Field       | Type             | Description                          |
+|-------------|------------------|--------------------------------------|
+| rule        | str              | Header or directive name             |
+| message     | str              | Human-readable error                 |
+| severity    | str              | "high", "medium", or "low"          |
+| value       | str | None       | Observed header value                |
+| expected    | list[str] | None | Expected values                      |
+| avoid       | list[str] | None | Disallowed values found              |
+| anomalies   | list[str] | None | Unexpected values                    |
+| delimiter   | str | None       | Multi-value delimiter                |
+
+Use `finding.to_dict()` for JSON-serializable output (omits None fields).
+
+## Rule Loaders
+
+```python
+from drheader.utils import default_rules, preset_rules, load_rules
+
+# Built-in defaults
+rules = default_rules()
+
+# OWASP ASVS V14 compliance preset
+rules = preset_rules("owasp-asvs-v14")
+
+# Custom YAML file, merged with defaults
+rules = load_rules(rules_file=open("my_rules.yml"), merge_default=True)
+
+# Custom YAML from a remote URI
+rules = load_rules(rules_uri="https://example.com/rules.yml", merge_default=True)
+```
+
+## CI/CD Integration
+
+The CLI exits with code 70 when findings exist, making it a drop-in CI gate:
+
+```yaml
+# GitHub Actions
+- run: pip install drheaderplus
+- run: drheader scan single https://your-app.example.com --preset owasp-asvs-v14
+```
+
+JUnit XML for CI report integration:
+
+```bash
+drheader scan single https://example.com --junit
+# Creates reports/junit.xml
+```
+
+## Custom Rules Format (YAML)
+
+```yaml
+Content-Security-Policy:
+  Required: True
+  Must-Avoid:
+    - unsafe-inline
+    - unsafe-eval
+  Directives:
+    Default-Src:
+      Required: True
+      Value-One-Of:
+        - none
+        - self
+Strict-Transport-Security:
+  Required: True
+  Directives:
+    max-age:
+      Required: True
+      Value-Gte: 15552000
+X-Frame-Options:
+  Required: True
+  Value-One-Of:
+    - DENY
+    - SAMEORIGIN
+Server:
+  Required: False
+  Severity: high
+```
+
+Rule keys: `Required` (True/False/Optional), `Value`, `Value-Any-Of`, `Value-One-Of`, `Value-Gte`, `Must-Avoid`, `Must-Contain`, `Must-Contain-One`, `Severity`, `Directives` (nested), `Cookies` (nested for Set-Cookie), `Preserve-Order`.
+
+## Automatic Cross-Header Checks
+
+These run automatically after rule-based validation:
+
+1. **SameSite=None without Secure** — cookies with SameSite=None must have Secure flag.
+2. **CSP Report-Only without enforcing CSP** — Content-Security-Policy-Report-Only without Content-Security-Policy.
+3. **CORS origin reflection** — probes for Access-Control-Allow-Origin reflecting arbitrary origins (scan mode only).
+4. **CSP nonce/hash awareness** — suppresses unsafe-inline findings when nonces or hashes are present.
+5. **CSP strict-dynamic support** — ignores scheme sources and self when strict-dynamic is present with nonces/hashes.
+
+## Links
+
+- PyPI: https://pypi.org/project/drheaderplus/
+- GitHub: https://github.com/garootman/drheaderplus
+- Examples: https://github.com/garootman/drheaderplus/blob/main/examples/EXAMPLES.md
+- Rules reference: https://github.com/garootman/drheaderplus/blob/main/RULES.md
+- CLI reference: https://github.com/garootman/drheaderplus/blob/main/CLI.md

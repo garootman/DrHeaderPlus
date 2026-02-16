@@ -11,8 +11,7 @@
     "assets",
     ".github",
     ".claude",
-    ".vscode",
-    "skills"
+    ".vscode"
   ],
   "excludeFiles": [
     "CONTRIBUTING.md",
@@ -27,8 +26,14 @@
     "Default HTTP method is HEAD; pass method='POST' to change",
     "Cross-origin isolation checks (COEP/COOP) require explicit cross_origin_isolated=True flag",
     "CORS origin reflection probe only runs in scan mode (URL), not compare mode (local headers)",
-    "analyze() returns list[Finding]; use finding.to_dict() for JSON output",
+    "analyze() returns list[Finding]; use finding.to_dict() for JSON-serializable output",
     "Custom rules: load_rules(rules_file=f) or load_rules(rules_uri=url, merge_default=True)",
-    "Preset rules: preset_rules('owasp-asvs-v14') -- cannot combine with custom rules files"
+    "Preset rules: preset_rules('owasp-asvs-v14') -- cannot combine with custom rules files",
+    "Finding is a dataclass (rule, message, severity, value, expected, avoid, anomalies, delimiter) — NOT a dict",
+    "Empty findings list means all headers passed validation; non-empty means violations found",
+    "CLI exit code is non-zero when findings exist — use this to fail CI/CD pipelines",
+    "Three rule loaders: default_rules() for built-in, preset_rules(name) for compliance presets, load_rules(file/uri) for custom YAML",
+    "All kwargs after url= are forwarded to requests.request() — timeout, verify, headers, params, etc.",
+    "Import path: from drheader import Drheader; from drheader.utils import load_rules, preset_rules"
   ]
 }
