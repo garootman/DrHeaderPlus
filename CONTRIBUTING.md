@@ -45,9 +45,9 @@ Ready to contribute? This section walks through how to set up DrHeaderPlus for l
 
 #### Pre-requisites
 
-DrHeaderPlus is built using Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+DrHeaderPlus is built using Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
-1. Install [Python 3.12+](https://www.python.org/downloads)
+1. Install [Python 3.11+](https://www.python.org/downloads)
 
 2. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
@@ -88,6 +88,6 @@ When submitting a pull request, please ensure that:
 
 1. The existing tests are passing, and new functionality is adequately covered with new tests
 2. The relevant documentation e.g. `README.md`, `RULES.md`, `CLI.md` is updated to reflect new or changed functionality
-3. The code works for Python >= 3.12
+3. The code works for Python >= 3.11
 4. The pull request is submitted against the `main` branch with no merge conflicts
 5. The pull request pipeline has succeeded

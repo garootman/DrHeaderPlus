@@ -7,7 +7,7 @@ description: |
   CORS misconfiguration, and 20+ other checks. Supports OWASP ASVS V14 preset.
 license: Apache-2.0
 compatibility: |
-  Requires Python >=3.12 and the drheaderplus package (pip install drheaderplus).
+  Requires Python >=3.11 and the drheaderplus package (pip install drheaderplus).
 allowed-tools: Bash(pip:*) Bash(uv:*) Bash(drheader:*) Bash(python:*)
 metadata:
   author: garootman

@@ -28,7 +28,7 @@ DrHeaderPlus ships a built-in [OWASP ASVS 4.0 V14](https://github.com/OWASP/ASVS
 
 ## Installation
 
-Requires Python 3.12+. Install from PyPI:
+Requires Python 3.11+. Install from PyPI:
 
 ```sh
 pip install drheaderplus
