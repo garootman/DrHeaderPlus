@@ -11,7 +11,7 @@ compatibility: |
 allowed-tools: Bash(pip:*) Bash(uv:*) Bash(drheader:*) Bash(python:*)
 metadata:
   author: garootman
-  version: "3.0.3"
+  version: "3.0.4"
 ---
 
 # DrHeaderPlus — Security Header Auditing
