@@ -1,23 +1,7 @@
 version: 2
 updates:
-- package-ecosystem: "pip"
-  directory: "/"
-  versioning-strategy: "lockfile-only"
-  schedule:
-    interval: "daily"
-  target-branch: "develop"
-  reviewers:
-    - "danielcuthbert"
-    - "javixeneize"
-    - "pealtrufo"
-    - "emilejq"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
     interval: "weekly"
-  target-branch: "develop"
-  reviewers:
-    - "danielcuthbert"
-    - "javixeneize"
-    - "pealtrufo"
-    - "emilejq"
+  target-branch: "main"
