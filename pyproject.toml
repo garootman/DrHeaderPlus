@@ -31,7 +31,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-docs = ["m2r2>=0.3.3", "sphinx>=7.1.2"]
 dev = [
     "lxml>=4.6.3",
     "pytest>=8.0.0",
@@ -47,6 +46,25 @@ drheader = "drheader.cli.cli:start"
 [project.urls]
 Homepage = "https://github.com/garootman/DrHeaderPlus"
 Repository = "https://github.com/garootman/DrHeaderPlus"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/.claude",
+    "/.vscode",
+    "/assets",
+    "/dist",
+    "/reports",
+    "/skills",
+    "/tests",
+    "/work_docs",
+    ".coverage",
+    ".dockerignore",
+    ".editorconfig",
+    "Dockerfile",
+    "Makefile",
+    "uv.lock",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["drheader"]

@@ -1,4 +1,36 @@
 {
-    "url": "https://context7.com/garootman/drheaderplus",
-    "public_key": "pk_vtYwJLWL0kDCuGUKRPhTf"
+  "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/garootman/drheaderplus",
+  "public_key": "pk_vtYwJLWL0kDCuGUKRPhTf",
+  "projectTitle": "DrHeaderPlus",
+  "description": "Python CLI and library for auditing HTTP security headers against configurable YAML rulesets. OWASP ASVS V14 preset, CSP nonce/hash intelligence, CORS misconfiguration detection, cookie validation.",
+  "excludeFolders": [
+    "docs",
+    "tests",
+    "dist",
+    "assets",
+    ".github",
+    ".claude",
+    ".vscode",
+    "skills"
+  ],
+  "excludeFiles": [
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "HISTORY.md",
+    "Dockerfile",
+    "Makefile",
+    "drheader.rst",
+    "modules.rst"
+  ],
+  "rules": [
+    "Header names are case-insensitive (uses CaseInsensitiveDict internally)",
+    "Use Drheader(url=...) to scan a remote endpoint, Drheader(headers={...}) for pre-captured headers",
+    "Default HTTP method is HEAD; pass method='POST' to change",
+    "Cross-origin isolation checks (COEP/COOP) require explicit cross_origin_isolated=True flag",
+    "CORS origin reflection probe only runs in scan mode (URL), not compare mode (local headers)",
+    "analyze() returns list[Finding]; use finding.to_dict() for JSON output",
+    "Custom rules: load_rules(rules_file=f) or load_rules(rules_uri=url, merge_default=True)",
+    "Preset rules: preset_rules('owasp-asvs-v14') -- cannot combine with custom rules files"
+  ]
 }

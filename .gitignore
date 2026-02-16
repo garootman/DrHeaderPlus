@@ -67,10 +67,8 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
-docs/_static/*
-!docs/_static/.keep
+# Sphinx documentation (removed — using markdown docs now)
+docs/
 
 # PyBuilder
 target/
@@ -94,7 +92,7 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
-
+.envs/
 # Spyder project settings
 .spyderproject
 .spyproject
